@@ -76,7 +76,7 @@
                 </div>
 
                 @php
-                    $filterRootCats = \App\Models\Category::whereNull('parent_id')->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
+                    $filterRootCats = $categoryTree ?? \App\Models\Category::whereNull('parent_id')->where('is_active', true)->orderBy('sort_order')->orderBy('name')->with('allChildren')->get();
                     $iconMap = [
                         'Cutting Tools' => '⚙',
                         'Measuring Equipment' => '📐',
@@ -84,14 +84,45 @@
                         'Aerospace Parts' => '✈',
                         'Raw Materials' => '🧱'
                     ];
+
+                    $categoriesForJs = $filterRootCats->map(function($cat) {
+                        return [
+                            'id' => (int) $cat->id,
+                            'name' => $cat->name,
+                            'slug' => $cat->slug,
+                            'color' => $cat->color,
+                            'all_ids' => array_values(array_unique($cat->getAllCategoryIds())),
+                            'children' => $cat->children->map(function($sub) {
+                                return [
+                                    'id' => (int) $sub->id,
+                                    'name' => $sub->name,
+                                    'slug' => $sub->slug,
+                                    'all_ids' => array_values(array_unique($sub->getAllCategoryIds())),
+                                    'children' => $sub->children->map(function($leaf) {
+                                        return [
+                                            'id' => (int) $leaf->id,
+                                            'name' => $leaf->name,
+                                            'slug' => $leaf->slug,
+                                            'all_ids' => array_values(array_unique($leaf->getAllCategoryIds())),
+                                        ];
+                                    })
+                                ];
+                            })
+                        ];
+                    });
                 @endphp
+
+                <script>
+                    window.MALFAUR_CATEGORIES = @json($categoriesForJs);
+                </script>
+
                 <div class="filter-cats" role="group" aria-label="Filter by category">
-                    <button class="filter-btn active" data-filter="all" id="filter-all">
+                    <button class="filter-btn active" data-filter="all" data-cat-id="all" id="filter-all">
                         <span class="f-dot"></span>
                         <span>All Products</span>
                     </button>
                     @foreach($filterRootCats as $fCat)
-                        <button class="filter-btn" data-filter="{{ $fCat->name }}" id="filter-{{ $fCat->slug }}">
+                        <button class="filter-btn" data-filter="{{ $fCat->name }}" data-cat-id="{{ $fCat->id }}" data-cat-slug="{{ $fCat->slug }}" id="filter-{{ $fCat->slug }}">
                             <span class="f-icon">{{ $iconMap[$fCat->name] ?? '✦' }}</span>
                             <span>{{ $fCat->name }}</span>
                         </button>
@@ -131,7 +162,7 @@
         <div class="catalogue-toolbar">
             <div class="toolbar-left">
                 <span class="live-pulse-dot" aria-hidden="true"></span>
-                <p class="products-count" id="products-count" aria-live="polite">9 products found</p>
+                <p class="products-count" id="products-count" aria-live="polite">Loading products...</p>
             </div>
             <div class="toolbar-right">
                 <div class="catalogue-category-indicator" id="category-indicator">
@@ -148,7 +179,10 @@
         <div class="product-grid-4">
             @foreach($products as $product)
             <article class="product-card fade-up"
-                data-category="{{ $product->category }}"
+                data-category="{{ $product->root_category_name }}"
+                data-root-category="{{ $product->root_category_name }}"
+                data-category-name="{{ $product->category_name }}"
+                data-category-ids="{{ json_encode($product->all_category_ids) }}"
                 data-name="{{ $product->name }}"
                 data-slug="{{ $product->slug }}"
                 data-desc="{{ $product->description }}"
@@ -158,7 +192,7 @@
                     <img src="{{ asset(Str::startsWith($product->image ?? '', 'http') ? $product->image : 'images/' . ($product->image ?? 'hero-engineering.png')) }}" alt="{{ $product->name }}" loading="lazy">
                 </a>
                 <div class="product-card-body">
-                    <span class="product-card-category-tag">{{ $product->category }}</span>
+                    <span class="product-card-category-tag">{{ $product->category_breadcrumb }}</span>
                     <h3 class="product-card-name">
                         <a href="{{ route('products.show', $product->slug) }}">{{ $product->name }}</a>
                     </h3>

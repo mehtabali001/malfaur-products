@@ -292,7 +292,7 @@ class CategorySeeder extends Seeder
                 $catId = $machineReamers?->id;
             } elseif (str_contains($name, 'countersink') || str_contains($name, 'counterbore')) {
                 $catId = $countersinks?->id;
-            } elseif (str_contains($name, 'parting') || str_contains($name, 'blade')) {
+            } elseif (str_contains($name, 'parting') || str_contains($name, 'blade') || str_contains($name, 'end mill') || str_contains($name, 'insert') || str_contains($name, 'milling') || str_contains($name, 'cutter')) {
                 $catId = $parting?->id;
             } elseif (str_contains($name, 'micrometer')) {
                 $catId = $micrometers?->id;
@@ -304,23 +304,26 @@ class CategorySeeder extends Seeder
                 $catId = $plungers?->id;
             } elseif (str_contains($name, 'index') || str_contains($name, 'locating')) {
                 $catId = $indexing?->id;
-            } elseif (str_contains($name, 'fastener') || str_contains($name, 'dowel') || str_contains($name, 'bearing')) {
+            } elseif (str_contains($name, 'fastener') || str_contains($name, 'dowel') || str_contains($name, 'bearing') || str_contains($name, 'bushing')) {
                 $catId = $fasteners?->id;
-            } elseif (str_contains($name, 'inconel') || str_contains($name, 'hastelloy') || str_contains($name, 'superalloy') || str_contains($name, 'titanium')) {
+            } elseif (str_contains($name, 'inconel') || str_contains($name, 'hastelloy') || str_contains($name, 'superalloy') || str_contains($name, 'titanium') || str_contains($name, 'alloy c') || str_contains($name, 'alloy x')) {
                 $catId = $superalloys?->id;
             } elseif (str_contains($name, 'fitting') || str_contains($name, 'rivet') || str_contains($name, 'flange')) {
                 $catId = $aviation?->id;
-            } elseif (str_contains($name, 'streamline') || str_contains($name, 'steel tube') || str_contains($name, 'alloy steel')) {
+            } elseif (str_contains($name, 'streamline') || str_contains($name, 'steel tube') || str_contains($name, 'alloy steel') || str_contains($name, 'round bar') || str_contains($name, 'flat stock') || str_contains($name, 'hex bar')) {
                 $catId = $tubes?->id;
-            } elseif (str_contains($name, 't-slot') || str_contains($name, 'channel') || str_contains($name, 'angle') || str_contains($name, 'extrusion')) {
+            } elseif (str_contains($name, 't-slot') || str_contains($name, 'channel') || str_contains($name, 'angle') || str_contains($name, 'extrusion') || str_contains($name, 'profile')) {
                 $catId = $profiles?->id;
-            } elseif (str_contains($name, 'tread plate') || str_contains($name, 'foil') || str_contains($name, 'sheet') || str_contains($name, 'shim')) {
+            } elseif (str_contains($name, 'tread plate') || str_contains($name, 'foil') || str_contains($name, 'sheet') || str_contains($name, 'shim') || str_contains($name, 'plate')) {
                 $catId = $sheets?->id;
             }
 
             // Fallback to root category by existing category string
             if (!$catId && !empty($p->category) && isset($catRoots[$p->category])) {
                 $catId = $catRoots[$p->category]->id;
+            }
+            if (!$catId && !empty($p->root_category_name) && isset($catRoots[$p->root_category_name])) {
+                $catId = $catRoots[$p->root_category_name]->id;
             }
 
             if ($catId) {

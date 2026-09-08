@@ -20,8 +20,16 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/products', function () {
-    $products = \App\Models\Product::orderBy('created_at', 'desc')->get();
-    return view('pages.products', compact('products'));
+    $products = \App\Models\Product::with(['categoryItem.parent.parent.parent'])
+        ->orderBy('created_at', 'desc')
+        ->get();
+    $categoryTree = \App\Models\Category::whereNull('parent_id')
+        ->where('is_active', true)
+        ->with(['children.children.children'])
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->get();
+    return view('pages.products', compact('products', 'categoryTree'));
 })->name('products');
 
 Route::get('/products/{slug}', function ($slug) {

@@ -238,84 +238,94 @@ document.addEventListener('DOMContentLoaded', function () {
         fadeEls.forEach(function (el) { el.classList.add('visible'); });
     }
 
-    /* ── Product Filtering (Products Page) ── */
+    /* ── Dynamic Multi-Level Category & Product Filtering Engine ── */
     const filterBtns = document.querySelectorAll('.filter-btn');
-    const productCards = document.querySelectorAll('.product-card[data-category]');
+    const productCards = document.querySelectorAll('.product-card');
     const searchInput = document.getElementById('product-search');
     const filterClear = document.getElementById('filter-clear');
     const productsCount = document.getElementById('products-count');
     const subcatFilterWrapper = document.getElementById('subcatFilterWrapper');
     const subcatPillsContainer = document.getElementById('subcatPillsContainer');
 
-    let activeCategory = 'all';
-    let activeSubcat = null;
-    let activeSlug = null;
+    // Dynamic categories tree passed from Blade
+    const categoryTree = window.MALFAUR_CATEGORIES || [];
+
+    let activeCategory = 'all'; // Root category name (e.g. 'Raw Materials' or 'all')
+    let activeCategoryId = null; // Root or active category ID
+    let activeSubcatId = null;   // Selected Subcategory ID (Level 2/3/4) or null
+    let activeSubcatName = null; // Selected Subcategory Name or null
+    let activeSlug = null;       // Filter by product slug if clicked from nav
     let searchQuery = '';
 
-    const categorySubcatsMap = {
-        'Cutting Tools': [
-            { id: 'all', label: 'All Cutting Tools' },
-            { id: 'reamers', label: 'Reamers & Deburring', keywords: ['reamer', 'deburr'] },
-            { id: 'countersinks', label: 'Countersinks & Counterbores', keywords: ['counter', 'countersink', 'counterbore'] },
-            { id: 'milling', label: 'Parting Off Blades', keywords: ['parting', 'blade', 'end mill', 'milling', 'insert'] }
-        ],
-        'Measuring Equipment': [
-            { id: 'all', label: 'All Measuring Equipment' },
-            { id: 'micrometers', label: 'Micrometers & Heads', keywords: ['micrometer', 'quantumike', 'mdh', 'outside micrometer'] },
-            { id: 'inside-measuring', label: 'Inside Measuring', keywords: ['holtest', 'inside', '3-point', 'internal', 'head', 'caliper jaw'] },
-            { id: 'calipers', label: 'Calipers & Height Gauges', keywords: ['caliper', 'height', 'gauge', 'vernier', 'dial', 'lh-600f'] }
-        ],
-        'Standard Parts': [
-            { id: 'all', label: 'All Standard Parts' },
-            { id: 'spring-plungers', label: 'Spring Plungers', keywords: ['spring plunger', 'plunger', 'thrust pin', 'slot and ball', 'long-lok'] },
-            { id: 'indexing-plungers', label: 'Indexing Plungers', keywords: ['indexing', 'kipp', '1.4305', 'positioning'] },
-            { id: 'fasteners-bearings', label: 'Fasteners & Bearings', keywords: ['bearing', 'fastener', 'bolt', 'hex', 'bushing'] }
-        ],
-        'Aerospace Parts': [
-            { id: 'all', label: 'All Aerospace Parts' },
-            { id: 'superalloys', label: 'Superalloys & High-Nickel', keywords: ['alloy c 22', 'alloy x', 'inconel', 'superalloy', 'alloy'] },
-            { id: 'aero-fittings', label: 'Aviation Fittings', keywords: ['ams', 'fitting', 'thermal', 'welding', 'electrode'] },
-            { id: 'aero-seals', label: 'Aerospace Fasteners & Seals', keywords: ['fastener', 'seal', 'o-ring', 'titanium', 'hydraulic'] }
-        ],
-        'Raw Materials': [
-            { id: 'all', label: 'All Raw Materials' },
-            { id: 'alloy-steels', label: 'Alloy Steels & Tubes', keywords: ['steel', 'hex bar', 'rectangle bar', 'streamline tube', 'tube'] },
-            { id: 'aluminium-profiles', label: 'Aluminium Profiles & Extrusions', keywords: ['aluminum angle', 'aluminum channel', 't slot', 'angle', 'channel', 'extrusion', '6082'] },
-            { id: 'sheets-plates', label: 'Sheets, Plates & Foils', keywords: ['foil', 'tread plate', 'plate', 'sheet'] }
-        ]
-    };
+    // Helper: Find category node by ID or slug in tree recursively
+    function findCategoryInTree(tree, matchFn) {
+        if (!tree || !tree.length) return null;
+        for (let i = 0; i < tree.length; i++) {
+            const node = tree[i];
+            if (matchFn(node)) return { node: node, root: node, parent: null };
+            if (node.children && node.children.length) {
+                const found = findCategoryInChildren(node.children, matchFn, node, node);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
 
-    const subcatMap = {
-        'reamers': { label: 'Reamers & Deburring', keywords: ['reamer', 'deburr'] },
-        'countersinks': { label: 'Countersinks & Counterbores', keywords: ['counter', 'countersink', 'counterbore'] },
-        'milling': { label: 'Parting Off Blades', keywords: ['parting', 'blade', 'end mill', 'milling', 'insert'] },
-        'micrometers': { label: 'Micrometers & Heads', keywords: ['micrometer', 'quantumike', 'mdh', 'outside micrometer'] },
-        'inside-measuring': { label: 'Inside Measuring Instruments', keywords: ['holtest', 'inside', '3-point', 'internal', 'head', 'caliper jaw'] },
-        'calipers': { label: 'Calipers & Height Gauges', keywords: ['caliper', 'height', 'gauge', 'vernier', 'dial', 'lh-600f'] },
-        'spring-plungers': { label: 'Spring Plungers', keywords: ['spring plunger', 'plunger', 'thrust pin', 'slot and ball', 'long-lok'] },
-        'indexing-plungers': { label: 'Indexing Plungers', keywords: ['indexing', 'kipp', '1.4305', 'positioning'] },
-        'fasteners-bearings': { label: 'Fasteners & Bearings', keywords: ['bearing', 'fastener', 'bolt', 'hex', 'bushing'] },
-        'superalloys': { label: 'Superalloys & High-Nickel', keywords: ['alloy c 22', 'alloy x', 'inconel', 'superalloy', 'alloy'] },
-        'aero-fittings': { label: 'Aviation Fittings & Consumables', keywords: ['ams', 'fitting', 'thermal', 'welding', 'electrode'] },
-        'aero-seals': { label: 'Aerospace Fasteners & Seals', keywords: ['fastener', 'seal', 'o-ring', 'titanium', 'hydraulic'] },
-        'alloy-steels': { label: 'Alloy Steels & Tubes', keywords: ['steel', 'hex bar', 'rectangle bar', 'streamline tube', 'tube'] },
-        'aluminium-profiles': { label: 'Aluminium Profiles & Extrusions', keywords: ['aluminum angle', 'aluminum channel', 't slot', 'angle', 'channel', 'extrusion', '6082'] },
-        'sheets-plates': { label: 'Sheets, Plates & Foils', keywords: ['foil', 'tread plate', 'plate', 'sheet'] }
-    };
+    function findCategoryInChildren(children, matchFn, parentNode, rootNode) {
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (matchFn(child)) return { node: child, root: rootNode, parent: parentNode };
+            if (child.children && child.children.length) {
+                const found = findCategoryInChildren(child.children, matchFn, child, rootNode);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
 
-    function countProductsForSubcat(catName, subcatObj) {
+    // Helper: Find root category object by Name or Slug
+    function findRootCategory(nameOrSlug) {
+        if (!nameOrSlug || nameOrSlug === 'all') return null;
+        const lower = nameOrSlug.toLowerCase();
+        return categoryTree.find(function (cat) {
+            return (cat.name && cat.name.toLowerCase() === lower) || (cat.slug && cat.slug.toLowerCase() === lower);
+        }) || null;
+    }
+
+    // Helper: Get card category IDs array
+    function getCardCategoryIds(card) {
+        try {
+            const raw = card.getAttribute('data-category-ids');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed.map(Number);
+            }
+        } catch (e) {}
+        return [];
+    }
+
+    // Helper: Count matching products for given category ID(s)
+    function countProductsForCategory(rootName, idsArray) {
         let count = 0;
         productCards.forEach(function (card) {
-            const cat = card.getAttribute('data-category') || '';
-            if (cat.toLowerCase() !== catName.toLowerCase()) return;
-            if (subcatObj.id === 'all') {
+            const cardRoot = (card.getAttribute('data-root-category') || card.getAttribute('data-category') || '').toLowerCase();
+            const cardIds = getCardCategoryIds(card);
+
+            if (rootName && rootName.toLowerCase() !== 'all') {
+                const rootMatches = (cardRoot === rootName.toLowerCase()) || (idsArray && idsArray.some(function (id) { return cardIds.includes(Number(id)); }));
+                if (!rootMatches) return;
+            }
+
+            if (!idsArray || idsArray.length === 0) {
                 count++;
                 return;
             }
-            const name = (card.getAttribute('data-name') || '').toLowerCase();
-            const desc = (card.getAttribute('data-desc') || '').toLowerCase();
-            const keywords = subcatObj.keywords || [];
-            if (keywords.some(function (kw) { return name.includes(kw) || desc.includes(kw); })) {
+
+            const matches = idsArray.some(function (id) {
+                return cardIds.includes(Number(id));
+            });
+
+            if (matches) {
                 count++;
             }
         });
@@ -325,14 +335,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function syncUrlState() {
         try {
             const url = new URL(window.location.href);
+            if (activeCategoryId) {
+                url.searchParams.set('category_id', activeCategoryId);
+            } else {
+                url.searchParams.delete('category_id');
+            }
+
             if (activeCategory && activeCategory !== 'all') {
                 url.searchParams.set('category', activeCategory);
             } else {
                 url.searchParams.delete('category');
             }
 
-            if (activeSubcat) {
-                url.searchParams.set('subcat', activeSubcat);
+            if (activeSubcatId) {
+                url.searchParams.set('subcat', activeSubcatId);
             } else {
                 url.searchParams.delete('subcat');
             }
@@ -350,44 +366,58 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             window.history.replaceState({}, '', url.toString());
-        } catch (e) {
-            // Ignore if URL object not supported
-        }
+        } catch (e) {}
     }
 
     function renderSubcatPills() {
         if (!subcatFilterWrapper || !subcatPillsContainer) return;
 
-        if (activeCategory === 'all' || !categorySubcatsMap[activeCategory]) {
+        const currentRoot = findRootCategory(activeCategory);
+
+        if (!currentRoot || activeCategory === 'all' || !currentRoot.children || currentRoot.children.length === 0) {
             subcatFilterWrapper.style.display = 'none';
             subcatPillsContainer.innerHTML = '';
             return;
         }
 
-        const subcats = categorySubcatsMap[activeCategory];
         subcatPillsContainer.innerHTML = '';
 
-        subcats.forEach(function (subcat) {
-            const count = countProductsForSubcat(activeCategory, subcat);
+        // 1. "All [Root Category]" pill
+        const rootTotalCount = countProductsForCategory(currentRoot.name, currentRoot.all_ids || [currentRoot.id]);
+        const allBtn = document.createElement('button');
+        allBtn.type = 'button';
+        allBtn.className = 'subcat-pill-btn' + (activeSubcatId === null ? ' active' : '');
+        allBtn.setAttribute('data-subcat-id', 'all');
+        allBtn.innerHTML = `<span>All ${currentRoot.name}</span><span class="subcat-count">${rootTotalCount}</span>`;
+
+        allBtn.addEventListener('click', function () {
+            subcatPillsContainer.querySelectorAll('.subcat-pill-btn').forEach(function (b) { b.classList.remove('active'); });
+            allBtn.classList.add('active');
+            activeSubcatId = null;
+            activeSubcatName = null;
+            activeSlug = null;
+            syncUrlState();
+            updateDisplay();
+        });
+        subcatPillsContainer.appendChild(allBtn);
+
+        // 2. Child Level 2 subcategories
+        currentRoot.children.forEach(function (sub) {
+            const subIds = sub.all_ids && sub.all_ids.length ? sub.all_ids : [sub.id];
+            const subCount = countProductsForCategory(currentRoot.name, subIds);
+
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'subcat-pill-btn';
-            btn.setAttribute('data-subcat-id', subcat.id);
-
-            const isCurrentActive = (activeSubcat === null && subcat.id === 'all') || (activeSubcat === subcat.id);
-            if (isCurrentActive) {
-                btn.classList.add('active');
-            }
-
-            btn.innerHTML = `<span>${subcat.label}</span><span class="subcat-count">${count}</span>`;
+            const isSubActive = activeSubcatId !== null && (Number(activeSubcatId) === Number(sub.id) || (sub.all_ids && sub.all_ids.includes(Number(activeSubcatId))));
+            btn.className = 'subcat-pill-btn' + (isSubActive ? ' active' : '');
+            btn.setAttribute('data-subcat-id', sub.id);
+            btn.innerHTML = `<span>${sub.name}</span><span class="subcat-count">${subCount}</span>`;
 
             btn.addEventListener('click', function () {
-                subcatPillsContainer.querySelectorAll('.subcat-pill-btn').forEach(function (b) {
-                    b.classList.remove('active');
-                });
+                subcatPillsContainer.querySelectorAll('.subcat-pill-btn').forEach(function (b) { b.classList.remove('active'); });
                 btn.classList.add('active');
-
-                activeSubcat = (subcat.id === 'all') ? null : subcat.id;
+                activeSubcatId = sub.id;
+                activeSubcatName = sub.name;
                 activeSlug = null;
                 syncUrlState();
                 updateDisplay();
@@ -401,35 +431,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateDisplay() {
         let visible = 0;
-        productCards.forEach(function (card) {
-            const cat = card.getAttribute('data-category') || '';
-            const name = (card.getAttribute('data-name') || '').toLowerCase();
-            const desc = (card.getAttribute('data-desc') || '').toLowerCase();
-            const slug = (card.getAttribute('data-slug') || '').toLowerCase();
-            const matchCat = activeCategory === 'all' || cat.toLowerCase() === activeCategory.toLowerCase();
+        const currentRoot = findRootCategory(activeCategory);
 
+        productCards.forEach(function (card) {
+            const cardRoot = (card.getAttribute('data-root-category') || card.getAttribute('data-category') || '').toLowerCase();
+            const cardName = (card.getAttribute('data-name') || '').toLowerCase();
+            const cardDesc = (card.getAttribute('data-desc') || '').toLowerCase();
+            const cardCatName = (card.getAttribute('data-category-name') || '').toLowerCase();
+            const cardSlug = (card.getAttribute('data-slug') || '').toLowerCase();
+            const cardIds = getCardCategoryIds(card);
+
+            // 1. Root Category Match
+            let matchCat = true;
+            if (activeCategory !== 'all') {
+                if (currentRoot && currentRoot.all_ids && currentRoot.all_ids.length > 0) {
+                    matchCat = currentRoot.all_ids.some(function (id) { return cardIds.includes(Number(id)); }) || (cardRoot === activeCategory.toLowerCase());
+                } else {
+                    matchCat = (cardRoot === activeCategory.toLowerCase());
+                }
+            }
+
+            // 2. Subcategory Match
+            let matchSubcat = true;
+            if (activeSubcatId !== null) {
+                const foundSub = findCategoryInTree(categoryTree, function (c) {
+                    return Number(c.id) === Number(activeSubcatId) || c.slug === String(activeSubcatId);
+                });
+
+                if (foundSub && foundSub.node) {
+                    const targetIds = foundSub.node.all_ids && foundSub.node.all_ids.length ? foundSub.node.all_ids : [foundSub.node.id];
+                    matchSubcat = targetIds.some(function (id) { return cardIds.includes(Number(id)); }) || cardCatName.includes(foundSub.node.name.toLowerCase());
+                } else {
+                    matchSubcat = cardIds.includes(Number(activeSubcatId));
+                }
+            }
+
+            // 3. Slug Match
             let matchSlug = true;
             if (activeSlug) {
-                matchSlug = (slug === activeSlug.toLowerCase()) || slug.startsWith(activeSlug.toLowerCase());
+                matchSlug = (cardSlug === activeSlug.toLowerCase()) || cardSlug.startsWith(activeSlug.toLowerCase());
             }
 
-            let matchSubcat = true;
-            if (activeSubcat && subcatMap[activeSubcat]) {
-                const keywords = subcatMap[activeSubcat].keywords;
-                matchSubcat = keywords.some(function (kw) {
-                    return name.includes(kw) || desc.includes(kw);
-                });
-            }
-
+            // 4. Search Query Match
             let matchSearch = true;
             if (searchQuery !== '') {
                 const searchTerms = searchQuery.split(/\s+/).filter(Boolean);
                 matchSearch = searchTerms.length === 0 || searchTerms.every(function (term) {
-                    return name.includes(term) || desc.includes(term) || cat.toLowerCase().includes(term);
+                    return cardName.includes(term) || cardDesc.includes(term) || cardCatName.includes(term) || cardRoot.includes(term);
                 });
             }
 
-            if (matchCat && matchSlug && matchSubcat && matchSearch) {
+            if (matchCat && matchSubcat && matchSlug && matchSearch) {
                 card.style.display = '';
                 visible++;
             } else {
@@ -444,8 +496,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const activeCatLabel = document.getElementById('active-category-label');
         if (activeCatLabel) {
-            if (activeSubcat && subcatMap[activeSubcat]) {
-                activeCatLabel.textContent = activeCategory + ' › ' + subcatMap[activeSubcat].label;
+            if (activeSubcatName) {
+                activeCatLabel.textContent = activeCategory + ' › ' + activeSubcatName;
             } else {
                 activeCatLabel.textContent = (activeCategory === 'all') ? 'All Categories' : activeCategory;
             }
@@ -455,8 +507,8 @@ document.addEventListener('DOMContentLoaded', function () {
             let label = visible + ' precision product' + (visible !== 1 ? 's' : '') + ' found';
             if (searchQuery) {
                 label += ' for "' + searchQuery + '"';
-            } else if (activeSubcat && subcatMap[activeSubcat]) {
-                label += ' in ' + subcatMap[activeSubcat].label;
+            } else if (activeSubcatName) {
+                label += ' in ' + activeSubcatName;
             } else if (activeCategory !== 'all') {
                 label += ' in ' + activeCategory;
             }
@@ -469,8 +521,11 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.addEventListener('click', function () {
                 filterBtns.forEach(function (b) { b.classList.remove('active'); });
                 btn.classList.add('active');
-                activeCategory = btn.getAttribute('data-filter');
-                activeSubcat = null;
+                activeCategory = btn.getAttribute('data-filter') || 'all';
+                const catIdAttr = btn.getAttribute('data-cat-id');
+                activeCategoryId = (catIdAttr && catIdAttr !== 'all') ? Number(catIdAttr) : null;
+                activeSubcatId = null;
+                activeSubcatName = null;
                 activeSlug = null;
                 if (searchInput && searchInput.placeholder.startsWith('Showing:')) {
                     searchInput.placeholder = 'Search by name, spec, or standard (e.g. Hex Bar, Caliper, Reamer)...';
@@ -481,28 +536,61 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Auto-select category & subcat & slug & search if passed in URL
+        // Parse URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const catQuery = urlParams.get('category');
+        const catIdParam = urlParams.get('category_id');
+        const catQueryParam = urlParams.get('category');
         const subcatQueryParam = urlParams.get('subcat');
         const slugQueryParam = urlParams.get('slug');
         const searchQueryParam = urlParams.get('search');
 
-        if (catQuery) {
-            const matchedBtn = Array.from(filterBtns).find(function (b) {
-                return b.getAttribute('data-filter').toLowerCase() === catQuery.toLowerCase();
+        // Priority 1: category_id provided (could be root or child category)
+        if (catIdParam) {
+            const foundCat = findCategoryInTree(categoryTree, function (c) {
+                return Number(c.id) === Number(catIdParam) || c.slug === String(catIdParam);
             });
+
+            if (foundCat) {
+                const rootNode = foundCat.root;
+                const targetNode = foundCat.node;
+
+                activeCategory = rootNode.name;
+                activeCategoryId = rootNode.id;
+
+                // Highlight corresponding root button
+                filterBtns.forEach(function (b) {
+                    const bName = (b.getAttribute('data-filter') || '').toLowerCase();
+                    const bId = b.getAttribute('data-cat-id');
+                    b.classList.toggle('active', bName === rootNode.name.toLowerCase() || (bId && Number(bId) === Number(rootNode.id)));
+                });
+
+                if (targetNode.id !== rootNode.id) {
+                    activeSubcatId = targetNode.id;
+                    activeSubcatName = targetNode.name;
+                }
+            }
+        } else if (catQueryParam) {
+            // Priority 2: category string provided
+            const matchedBtn = Array.from(filterBtns).find(function (b) {
+                return (b.getAttribute('data-filter') || '').toLowerCase() === catQueryParam.toLowerCase() || (b.getAttribute('data-cat-slug') || '').toLowerCase() === catQueryParam.toLowerCase();
+            });
+
             if (matchedBtn) {
                 filterBtns.forEach(function (b) { b.classList.remove('active'); });
                 matchedBtn.classList.add('active');
                 activeCategory = matchedBtn.getAttribute('data-filter');
+                const catIdAttr = matchedBtn.getAttribute('data-cat-id');
+                activeCategoryId = (catIdAttr && catIdAttr !== 'all') ? Number(catIdAttr) : null;
             }
         }
 
-        if (subcatQueryParam && subcatMap[subcatQueryParam]) {
-            activeSubcat = subcatQueryParam;
-            if (searchInput) {
-                searchInput.placeholder = 'Showing: ' + subcatMap[subcatQueryParam].label;
+        if (subcatQueryParam && !activeSubcatId) {
+            const foundSub = findCategoryInTree(categoryTree, function (c) {
+                return Number(c.id) === Number(subcatQueryParam) || c.slug === String(subcatQueryParam);
+            });
+            if (foundSub) {
+                activeSubcatId = foundSub.node.id;
+                activeSubcatName = foundSub.node.name;
             }
         }
 
@@ -518,9 +606,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         renderSubcatPills();
-        if (catQuery || subcatQueryParam || slugQueryParam || searchQueryParam) {
-            updateDisplay();
-        }
+        updateDisplay();
     }
 
     const searchClearBtn = document.getElementById('search-clear-btn');
@@ -528,7 +614,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (searchInput) {
         searchInput.addEventListener('input', function () {
             searchQuery = searchInput.value.trim().toLowerCase();
-            activeSubcat = null;
+            activeSubcatId = null;
+            activeSubcatName = null;
             activeSlug = null;
             if (searchClearBtn) {
                 searchClearBtn.style.display = searchInput.value.length > 0 ? 'inline-flex' : 'none';
@@ -553,7 +640,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetAllFilters() {
         searchQuery = '';
         activeCategory = 'all';
-        activeSubcat = null;
+        activeCategoryId = null;
+        activeSubcatId = null;
+        activeSubcatName = null;
         activeSlug = null;
         if (searchInput) {
             searchInput.value = '';
@@ -587,7 +676,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 searchQuery = query.toLowerCase();
                 if (searchClearBtn) searchClearBtn.style.display = 'inline-flex';
                 activeCategory = 'all';
-                activeSubcat = null;
+                activeCategoryId = null;
+                activeSubcatId = null;
+                activeSubcatName = null;
                 activeSlug = null;
                 filterBtns.forEach(function (b) {
                     b.classList.toggle('active', b.getAttribute('data-filter') === 'all');

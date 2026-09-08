@@ -78,17 +78,50 @@ class Product extends Model
     }
 
     /**
-     * Map 'category_id' to category string name.
+     * Root category name (e.g. Cutting Tools, Measuring Equipment, Raw Materials).
      */
-    public function getCategoryAttribute()
+    public function getRootCategoryNameAttribute(): string
     {
         if ($this->categoryItem) {
-            return $this->categoryItem->name;
+            return $this->categoryItem->root_category->name;
         }
         if (!empty($this->attributes['category'])) {
             return $this->attributes['category'];
         }
         return 'Cutting Tools';
+    }
+
+    /**
+     * Direct assigned category name.
+     */
+    public function getCategoryNameAttribute(): string
+    {
+        if ($this->categoryItem) {
+            return $this->categoryItem->name;
+        }
+        return $this->root_category_name;
+    }
+
+    /**
+     * Map 'category' attribute to root category name for filter compatibility.
+     */
+    public function getCategoryAttribute()
+    {
+        return $this->root_category_name;
+    }
+
+    /**
+     * Get all ancestor and self category IDs for hierarchical filtering.
+     */
+    public function getAllCategoryIdsAttribute(): array
+    {
+        if ($this->categoryItem) {
+            return $this->categoryItem->getAllAncestorAndSelfIds();
+        }
+        if (!empty($this->category_id)) {
+            return [(int) $this->category_id];
+        }
+        return [];
     }
 
     /**

@@ -117,5 +117,31 @@ class CategoryTreeTest extends TestCase
         $this->assertNotNull($product);
         $this->assertEquals($subSub->id, $product->category_id);
         $this->assertEquals('Cutting Tools > Reamers > Machine Reamers', $product->category_breadcrumb);
+        $this->assertEquals('Cutting Tools', $product->root_category_name);
+        $this->assertContains($root->id, $product->all_category_ids);
+        $this->assertContains($sub->id, $product->all_category_ids);
+        $this->assertContains($subSub->id, $product->all_category_ids);
+    }
+
+    public function test_frontend_products_catalogue_renders_dynamic_categories_and_products()
+    {
+        $root = Category::create(['name' => 'Raw Materials', 'slug' => 'raw-materials']);
+        $sub = Category::create(['name' => 'Alloy Steels & Tubes', 'slug' => 'alloy-steels-tubes', 'parent_id' => $root->id]);
+        $leaf = Category::create(['name' => '4130 Chrome Moly', 'slug' => '4130-chrome-moly', 'parent_id' => $sub->id]);
+
+        $product = Product::create([
+            'title' => '4130 Chrome Moly Streamline Tube',
+            'slug' => '4130-chrome-moly-streamline-tube',
+            'category_id' => $leaf->id,
+            'description' => 'Seamless cold drawn steel tube for aerospace.',
+        ]);
+
+        $response = $this->get('/products');
+        $response->assertStatus(200);
+        $response->assertSee('window.MALFAUR_CATEGORIES', false);
+        $response->assertSee('Raw Materials');
+        $response->assertSee('data-root-category="Raw Materials"', false);
+        $response->assertSee('data-category-ids="[' . $leaf->id . ',' . $sub->id . ',' . $root->id . ']"', false);
+        $response->assertSee('4130 Chrome Moly Streamline Tube');
     }
 }

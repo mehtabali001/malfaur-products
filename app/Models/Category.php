@@ -94,6 +94,40 @@ class Category extends Model
     }
 
     /**
+     * Get root category by traversing parent chain up to root.
+     */
+    public function getRootCategory(): Category
+    {
+        $curr = $this;
+        while ($curr->parent) {
+            $curr = $curr->parent;
+        }
+        return $curr;
+    }
+
+    /**
+     * Accessor for root category.
+     */
+    public function getRootCategoryAttribute(): Category
+    {
+        return $this->getRootCategory();
+    }
+
+    /**
+     * Get all ancestor IDs and self ID.
+     */
+    public function getAllAncestorAndSelfIds(): array
+    {
+        $ids = [(int) $this->id];
+        $curr = $this->parent;
+        while ($curr) {
+            $ids[] = (int) $curr->id;
+            $curr = $curr->parent;
+        }
+        return array_values(array_unique($ids));
+    }
+
+    /**
      * Get full breadcrumb path (e.g., "Cutting Tools > Reamers & Deburring > Machine Reamers").
      */
     public function getBreadcrumbPathAttribute(): string
