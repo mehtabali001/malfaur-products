@@ -5,6 +5,19 @@
 
 @section('content')
 
+@php
+    $aboutStory = \App\Models\PageContent::getSection('about', 'story');
+    $aboutTitle = $aboutStory['title'] ?? 'Who We Are';
+    $aboutSubtitle = $aboutStory['subtitle'] ?? 'A UK engineering products supplier defined by a commitment to quality, technical integrity, and genuine customer service.';
+    $aboutContent = $aboutStory['content'] ?? 'Malfaur Engineering Products exists to supply quality-assured engineering components and industrial products to professional customers throughout the United Kingdom. We understand the environment our customers operate in — demanding production schedules, rigorous safety and quality standards, and the expectation that every component will perform exactly as required.';
+    $aboutMission = $aboutStory['meta_data']['mission'] ?? 'To empower UK manufacturers and engineers with peerless tooling quality, robust supply chain reliability, and bespoke technical guidance.';
+    $aboutVision = $aboutStory['meta_data']['vision'] ?? 'To be recognized as the premier British distributor for mission-critical engineering components, aerospace parts, and advanced cutting solutions.';
+    $aboutImg = $aboutStory['image'] ?? 'images/company-workshop.png';
+    if (!str_starts_with($aboutImg, 'http') && !str_starts_with($aboutImg, 'images/')) {
+        $aboutImg = 'images/' . $aboutImg;
+    }
+@endphp
+
 {{-- ═══════════════════════════════════════
      PAGE HERO
 ═══════════════════════════════════════ --}}
@@ -20,8 +33,8 @@
                 <span class="current">Who We Are</span>
             </nav>
             <span class="section-label" style="color:var(--accent);">About Malfaur</span>
-            <h1 class="display-2" id="about-hero-heading">Who We Are</h1>
-            <p class="lead">A UK engineering products supplier defined by a commitment to quality, technical integrity, and genuine customer service.</p>
+            <h1 class="display-2" id="about-hero-heading">{{ $aboutTitle }}</h1>
+            <p class="lead">{{ $aboutSubtitle }}</p>
         </div>
     </div>
 </section>
@@ -34,21 +47,27 @@
         <div class="about-intro-grid">
             <div class="about-text fade-up">
                 <span class="section-label">Our Background</span>
-                <h2 class="heading-1" id="about-intro-heading">An Engineering Products Company Built on Expertise</h2>
+                <h2 class="heading-1" id="about-intro-heading">{{ $aboutTitle }}</h2>
                 <span class="divider-accent"></span>
-                <p class="body-lg">
-                    Malfaur Engineering Products exists to supply quality-assured engineering components and industrial products to professional customers throughout the United Kingdom.
-                </p>
-                <p>
-                    We understand the environment our customers operate in — demanding production schedules, rigorous safety and quality standards, and the expectation that every component will perform exactly as required. Our product selection reflects those demands.
-                </p>
-                <p>
-                    Our catalogue spans precision bearings, hydraulic and pneumatic components, industrial fasteners, cutting tools, and measurement instruments. Products that professional engineers and maintenance teams rely upon every day.
-                </p>
-                <p>
-                    We are not a generic online marketplace. We are a focused engineering products supplier, maintaining product knowledge and technical understanding across our range, so we can provide genuinely useful guidance rather than simply processing orders.
-                </p>
-                <a href="{{ route('products') }}" class="btn btn-outline" style="margin-top:1rem;" id="about-products-btn">
+                <div class="body-lg" style="margin-bottom: 1.25rem; white-space: pre-wrap; line-height: 1.7; color: var(--text-secondary);">
+                    {!! nl2br(e($aboutContent)) !!}
+                </div>
+
+                @if(!empty($aboutMission))
+                    <div style="background: rgba(8, 21, 40, 0.03); border-left: 3px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem;">
+                        <strong style="display:block; color: var(--navy); font-size: 0.95rem; margin-bottom: 0.25rem;">Our Mission:</strong>
+                        <p style="margin:0; font-size: 0.9rem; color: var(--text-secondary);">{{ $aboutMission }}</p>
+                    </div>
+                @endif
+
+                @if(!empty($aboutVision))
+                    <div style="background: rgba(8, 21, 40, 0.03); border-left: 3px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin-bottom: 1.5rem;">
+                        <strong style="display:block; color: var(--navy); font-size: 0.95rem; margin-bottom: 0.25rem;">Our Vision:</strong>
+                        <p style="margin:0; font-size: 0.9rem; color: var(--text-secondary);">{{ $aboutVision }}</p>
+                    </div>
+                @endif
+
+                <a href="{{ route('products') }}" class="btn btn-outline" style="margin-top:0.5rem;" id="about-products-btn">
                     View Our Products
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
@@ -57,7 +76,7 @@
             </div>
 
             <div class="about-image fade-up fade-up-delay-2">
-                <img src="{{ asset('images/company-workshop.png') }}" alt="Engineering workshop environment" loading="lazy">
+                <img src="{{ asset($aboutImg) }}" alt="Engineering workshop environment" loading="lazy" onerror="this.src='{{ asset('images/company-workshop.png') }}'">
             </div>
         </div>
     </div>

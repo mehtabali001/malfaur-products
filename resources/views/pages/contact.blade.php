@@ -5,6 +5,13 @@
 
 @section('content')
 
+@php
+    $contactInfo = \App\Models\PageContent::getSection('contact', 'info');
+    $contactTitle = $contactInfo['title'] ?? 'Let\'s Discuss Your Requirements';
+    $contactSubtitle = $contactInfo['subtitle'] ?? 'Whether you have a specific product enquiry or would like to discuss your engineering supply requirements, our team is here to help.';
+    $contactDesc = $contactInfo['content'] ?? 'We welcome enquiries from engineering professionals, maintenance teams, trade customers and businesses throughout the UK. Use the form to get in touch — we\'ll respond promptly.';
+@endphp
+
 {{-- ═══════════════════════════════════════
      PAGE HERO
 ═══════════════════════════════════════ --}}
@@ -20,8 +27,8 @@
                 <span class="current">Contact</span>
             </nav>
             <span class="section-label" style="color:var(--accent);">Get In Touch</span>
-            <h1 class="display-2" id="contact-hero-heading">Let's Discuss Your Requirements</h1>
-            <p class="lead">Whether you have a specific product enquiry or would like to discuss your engineering supply requirements, our team is here to help.</p>
+            <h1 class="display-2" id="contact-hero-heading">{{ $contactTitle }}</h1>
+            <p class="lead">{{ $contactSubtitle }}</p>
         </div>
     </div>
 </section>
@@ -32,6 +39,14 @@
 <section class="section-pad" aria-labelledby="contact-section-heading">
     <div class="container">
         <h2 class="sr-only" id="contact-section-heading">Contact Information and Enquiry Form</h2>
+
+        @if(session('success'))
+            <div style="background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span style="font-weight: 600;">{{ session('success') }}</span>
+            </div>
+        @endif
+
         <div class="contact-grid">
 
             {{-- LEFT: Contact Info --}}
@@ -40,7 +55,7 @@
                 <h2 class="heading-1" style="margin-bottom:0.75rem;">Talk to the Malfaur Team</h2>
                 <span class="divider-accent"></span>
                 <p>
-                    We welcome enquiries from engineering professionals, maintenance teams, trade customers and businesses throughout the UK. Use the form to get in touch — we'll respond promptly.
+                    {{ $contactDesc }}
                 </p>
 
                 <div class="contact-details">
@@ -53,7 +68,11 @@
                         </div>
                         <div>
                             <p class="contact-detail-label">Email</p>
-                            <p class="contact-detail-value">enquiries@malfaurengineering.co.uk</p>
+                            <p class="contact-detail-value">
+                                <a href="mailto:{{ \App\Models\Setting::get('contact_email', 'enquiries@malfaurengineering.co.uk') }}" style="color: inherit; text-decoration: none;">
+                                    {{ \App\Models\Setting::get('contact_email', 'enquiries@malfaurengineering.co.uk') }}
+                                </a>
+                            </p>
                         </div>
                     </div>
 
@@ -65,7 +84,11 @@
                         </div>
                         <div>
                             <p class="contact-detail-label">Phone</p>
-                            <p class="contact-detail-value">+44 (0) 000 000 0000<br><span style="font-size:0.8rem;color:var(--text-muted);">Number to be confirmed</span></p>
+                            <p class="contact-detail-value">
+                                <a href="tel:{{ \App\Models\Setting::get('contact_phone', '+44 (0) 000 000 0000') }}" style="color: inherit; text-decoration: none;">
+                                    {{ \App\Models\Setting::get('contact_phone', '+44 (0) 000 000 0000') }}
+                                </a>
+                            </p>
                         </div>
                     </div>
 
@@ -78,7 +101,7 @@
                         </div>
                         <div>
                             <p class="contact-detail-label">Address</p>
-                            <p class="contact-detail-value">United Kingdom<br><span style="font-size:0.8rem;color:var(--text-muted);">Full address to be confirmed</span></p>
+                            <p class="contact-detail-value">{{ \App\Models\Setting::get('contact_address', 'United Kingdom') }}</p>
                         </div>
                     </div>
 
@@ -91,9 +114,7 @@
                         <div>
                             <p class="contact-detail-label">Business Hours</p>
                             <p class="contact-detail-value">
-                                Monday – Friday<br>
-                                <strong>08:00 – 17:30</strong><br>
-                                <span style="font-size:0.8rem;color:var(--text-muted);">Closed weekends and Bank Holidays</span>
+                                {{ \App\Models\Setting::get('contact_hours', 'Monday – Friday: 08:00 – 17:30 (GMT)') }}
                             </p>
                         </div>
                     </div>
@@ -103,7 +124,7 @@
                 <div style="margin-top:2.5rem;padding:1.5rem;background:var(--accent-pale);border:1px solid rgba(200,134,10,0.2);border-radius:var(--radius-md);">
                     <p style="font-size:0.8rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.5rem;">Trade &amp; Professional Enquiries Welcome</p>
                     <p style="font-size:0.875rem;color:var(--text-secondary);line-height:1.65;">
-                        We work with manufacturers, maintenance departments, engineering contractors and trade buyers across the UK. All enquiries are handled by our technical team.
+                        We work with manufacturers, maintenance departments, engineering contractors and trade buyers across the UK. All enquiries are logged directly into our system and handled by our technical team.
                     </p>
                 </div>
             </div>
@@ -114,46 +135,47 @@
                     <h3 class="contact-form-title">Send an Enquiry</h3>
                     <p class="contact-form-sub">Complete the form below and a member of our team will respond within one business day.</p>
 
-                    <form id="contact-form" novalidate aria-label="Product enquiry form">
+                    <form id="contact-form" action="{{ route('contact.submit') }}" method="POST" aria-label="Product enquiry form">
+                        @csrf
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label" for="contact-name">Name <span class="required" aria-label="required">*</span></label>
-                                <input class="form-input" type="text" id="contact-name" name="name" placeholder="Your full name" required autocomplete="name">
+                                <input class="form-input" type="text" id="contact-name" name="name" value="{{ old('name') }}" placeholder="Your full name" required autocomplete="name">
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="contact-company">Company</label>
-                                <input class="form-input" type="text" id="contact-company" name="company" placeholder="Company or organisation" autocomplete="organization">
+                                <input class="form-input" type="text" id="contact-company" name="company" value="{{ old('company') }}" placeholder="Company or organisation" autocomplete="organization">
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label" for="contact-email">Email <span class="required" aria-label="required">*</span></label>
-                                <input class="form-input" type="email" id="contact-email" name="email" placeholder="your@email.com" required autocomplete="email">
+                                <input class="form-input" type="email" id="contact-email" name="email" value="{{ old('email') }}" placeholder="your@email.com" required autocomplete="email">
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="contact-phone">Phone</label>
-                                <input class="form-input" type="tel" id="contact-phone" name="phone" placeholder="+44 (0) 000 000 0000" autocomplete="tel">
+                                <input class="form-input" type="tel" id="contact-phone" name="phone" value="{{ old('phone') }}" placeholder="+44 (0) 000 000 0000" autocomplete="tel">
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="contact-subject">Subject <span class="required" aria-label="required">*</span></label>
                             <select class="form-input" id="contact-subject" name="subject" required>
-                                <option value="" disabled {{ !request()->has('product') ? 'selected' : '' }}>Select enquiry type</option>
-                                <option value="product-enquiry" {{ request()->has('product') ? 'selected' : '' }}>Product Enquiry</option>
-                                <option value="quote">Request a Quote</option>
-                                <option value="technical">Technical Information</option>
-                                <option value="availability">Product Availability</option>
-                                <option value="trade-account">Trade Account</option>
-                                <option value="other">General Enquiry</option>
+                                <option value="" disabled {{ !request()->has('product') && !old('subject') ? 'selected' : '' }}>Select enquiry type</option>
+                                <option value="Product Enquiry" {{ request()->has('product') || old('subject') == 'Product Enquiry' ? 'selected' : '' }}>Product Enquiry</option>
+                                <option value="Request a Quote" {{ old('subject') == 'Request a Quote' ? 'selected' : '' }}>Request a Quote</option>
+                                <option value="Technical Information" {{ old('subject') == 'Technical Information' ? 'selected' : '' }}>Technical Information</option>
+                                <option value="Product Availability" {{ old('subject') == 'Product Availability' ? 'selected' : '' }}>Product Availability</option>
+                                <option value="Trade Account" {{ old('subject') == 'Trade Account' ? 'selected' : '' }}>Trade Account</option>
+                                <option value="General Enquiry" {{ old('subject') == 'General Enquiry' ? 'selected' : '' }}>General Enquiry</option>
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="contact-message">Message <span class="required" aria-label="required">*</span></label>
-                            <textarea class="form-input" id="contact-message" name="message" placeholder="Please describe your requirements, including any relevant product specifications, quantities or application details..." required rows="5">@if(request()->has('product'))Hello, I would like to request an enquiry regarding the product: {{ request('product') }}@if(request()->has('sku')) (SKU: {{ request('sku') }})@endif. Please provide more details on pricing and availability.@endif</textarea>
+                            <textarea class="form-input" id="contact-message" name="message" placeholder="Please describe your requirements, including any relevant product specifications, quantities or application details..." required rows="5">@if(old('message')){{ old('message') }}@elseif(request()->has('product'))Hello, I would like to request an enquiry regarding the product: {{ request('product') }}@if(request()->has('sku')) (SKU: {{ request('sku') }})@endif. Please provide more details on pricing and availability.@endif</textarea>
                         </div>
 
                         <div class="form-submit">
@@ -169,9 +191,6 @@
                             By submitting this form you agree to Malfaur Engineering Products contacting you regarding your enquiry. Your information will not be shared with third parties.
                         </p>
                     </form>
-                </div>
-            </div>
-
         </div>
     </div>
 </section>

@@ -244,17 +244,52 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('product-search');
     const filterClear = document.getElementById('filter-clear');
     const productsCount = document.getElementById('products-count');
+    const subcatFilterWrapper = document.getElementById('subcatFilterWrapper');
+    const subcatPillsContainer = document.getElementById('subcatPillsContainer');
 
     let activeCategory = 'all';
     let activeSubcat = null;
     let activeSlug = null;
     let searchQuery = '';
 
+    const categorySubcatsMap = {
+        'Cutting Tools': [
+            { id: 'all', label: 'All Cutting Tools' },
+            { id: 'reamers', label: 'Reamers & Deburring', keywords: ['reamer', 'deburr'] },
+            { id: 'countersinks', label: 'Countersinks & Counterbores', keywords: ['counter', 'countersink', 'counterbore'] },
+            { id: 'milling', label: 'Parting Off Blades', keywords: ['parting', 'blade', 'end mill', 'milling', 'insert'] }
+        ],
+        'Measuring Equipment': [
+            { id: 'all', label: 'All Measuring Equipment' },
+            { id: 'micrometers', label: 'Micrometers & Heads', keywords: ['micrometer', 'quantumike', 'mdh', 'outside micrometer'] },
+            { id: 'inside-measuring', label: 'Inside Measuring', keywords: ['holtest', 'inside', '3-point', 'internal', 'head', 'caliper jaw'] },
+            { id: 'calipers', label: 'Calipers & Height Gauges', keywords: ['caliper', 'height', 'gauge', 'vernier', 'dial', 'lh-600f'] }
+        ],
+        'Standard Parts': [
+            { id: 'all', label: 'All Standard Parts' },
+            { id: 'spring-plungers', label: 'Spring Plungers', keywords: ['spring plunger', 'plunger', 'thrust pin', 'slot and ball', 'long-lok'] },
+            { id: 'indexing-plungers', label: 'Indexing Plungers', keywords: ['indexing', 'kipp', '1.4305', 'positioning'] },
+            { id: 'fasteners-bearings', label: 'Fasteners & Bearings', keywords: ['bearing', 'fastener', 'bolt', 'hex', 'bushing'] }
+        ],
+        'Aerospace Parts': [
+            { id: 'all', label: 'All Aerospace Parts' },
+            { id: 'superalloys', label: 'Superalloys & High-Nickel', keywords: ['alloy c 22', 'alloy x', 'inconel', 'superalloy', 'alloy'] },
+            { id: 'aero-fittings', label: 'Aviation Fittings', keywords: ['ams', 'fitting', 'thermal', 'welding', 'electrode'] },
+            { id: 'aero-seals', label: 'Aerospace Fasteners & Seals', keywords: ['fastener', 'seal', 'o-ring', 'titanium', 'hydraulic'] }
+        ],
+        'Raw Materials': [
+            { id: 'all', label: 'All Raw Materials' },
+            { id: 'alloy-steels', label: 'Alloy Steels & Tubes', keywords: ['steel', 'hex bar', 'rectangle bar', 'streamline tube', 'tube'] },
+            { id: 'aluminium-profiles', label: 'Aluminium Profiles & Extrusions', keywords: ['aluminum angle', 'aluminum channel', 't slot', 'angle', 'channel', 'extrusion', '6082'] },
+            { id: 'sheets-plates', label: 'Sheets, Plates & Foils', keywords: ['foil', 'tread plate', 'plate', 'sheet'] }
+        ]
+    };
+
     const subcatMap = {
         'reamers': { label: 'Reamers & Deburring', keywords: ['reamer', 'deburr'] },
         'countersinks': { label: 'Countersinks & Counterbores', keywords: ['counter', 'countersink', 'counterbore'] },
-        'milling': { label: 'Parting Off Blades', keywords: ['parting', 'blade'] },
-        'micrometers': { label: 'Micrometers & Heads', keywords: ['micrometer', 'quantumike', 'mdh'] },
+        'milling': { label: 'Parting Off Blades', keywords: ['parting', 'blade', 'end mill', 'milling', 'insert'] },
+        'micrometers': { label: 'Micrometers & Heads', keywords: ['micrometer', 'quantumike', 'mdh', 'outside micrometer'] },
         'inside-measuring': { label: 'Inside Measuring Instruments', keywords: ['holtest', 'inside', '3-point', 'internal', 'head', 'caliper jaw'] },
         'calipers': { label: 'Calipers & Height Gauges', keywords: ['caliper', 'height', 'gauge', 'vernier', 'dial', 'lh-600f'] },
         'spring-plungers': { label: 'Spring Plungers', keywords: ['spring plunger', 'plunger', 'thrust pin', 'slot and ball', 'long-lok'] },
@@ -267,6 +302,102 @@ document.addEventListener('DOMContentLoaded', function () {
         'aluminium-profiles': { label: 'Aluminium Profiles & Extrusions', keywords: ['aluminum angle', 'aluminum channel', 't slot', 'angle', 'channel', 'extrusion', '6082'] },
         'sheets-plates': { label: 'Sheets, Plates & Foils', keywords: ['foil', 'tread plate', 'plate', 'sheet'] }
     };
+
+    function countProductsForSubcat(catName, subcatObj) {
+        let count = 0;
+        productCards.forEach(function (card) {
+            const cat = card.getAttribute('data-category') || '';
+            if (cat.toLowerCase() !== catName.toLowerCase()) return;
+            if (subcatObj.id === 'all') {
+                count++;
+                return;
+            }
+            const name = (card.getAttribute('data-name') || '').toLowerCase();
+            const desc = (card.getAttribute('data-desc') || '').toLowerCase();
+            const keywords = subcatObj.keywords || [];
+            if (keywords.some(function (kw) { return name.includes(kw) || desc.includes(kw); })) {
+                count++;
+            }
+        });
+        return count;
+    }
+
+    function syncUrlState() {
+        try {
+            const url = new URL(window.location.href);
+            if (activeCategory && activeCategory !== 'all') {
+                url.searchParams.set('category', activeCategory);
+            } else {
+                url.searchParams.delete('category');
+            }
+
+            if (activeSubcat) {
+                url.searchParams.set('subcat', activeSubcat);
+            } else {
+                url.searchParams.delete('subcat');
+            }
+
+            if (searchQuery) {
+                url.searchParams.set('search', searchQuery);
+            } else {
+                url.searchParams.delete('search');
+            }
+
+            if (activeSlug) {
+                url.searchParams.set('slug', activeSlug);
+            } else {
+                url.searchParams.delete('slug');
+            }
+
+            window.history.replaceState({}, '', url.toString());
+        } catch (e) {
+            // Ignore if URL object not supported
+        }
+    }
+
+    function renderSubcatPills() {
+        if (!subcatFilterWrapper || !subcatPillsContainer) return;
+
+        if (activeCategory === 'all' || !categorySubcatsMap[activeCategory]) {
+            subcatFilterWrapper.style.display = 'none';
+            subcatPillsContainer.innerHTML = '';
+            return;
+        }
+
+        const subcats = categorySubcatsMap[activeCategory];
+        subcatPillsContainer.innerHTML = '';
+
+        subcats.forEach(function (subcat) {
+            const count = countProductsForSubcat(activeCategory, subcat);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'subcat-pill-btn';
+            btn.setAttribute('data-subcat-id', subcat.id);
+
+            const isCurrentActive = (activeSubcat === null && subcat.id === 'all') || (activeSubcat === subcat.id);
+            if (isCurrentActive) {
+                btn.classList.add('active');
+            }
+
+            btn.innerHTML = `<span>${subcat.label}</span><span class="subcat-count">${count}</span>`;
+
+            btn.addEventListener('click', function () {
+                subcatPillsContainer.querySelectorAll('.subcat-pill-btn').forEach(function (b) {
+                    b.classList.remove('active');
+                });
+                btn.classList.add('active');
+
+                activeSubcat = (subcat.id === 'all') ? null : subcat.id;
+                activeSlug = null;
+                syncUrlState();
+                updateDisplay();
+            });
+
+            subcatPillsContainer.appendChild(btn);
+        });
+
+        subcatFilterWrapper.style.display = 'block';
+    }
 
     function updateDisplay() {
         let visible = 0;
@@ -313,7 +444,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const activeCatLabel = document.getElementById('active-category-label');
         if (activeCatLabel) {
-            activeCatLabel.textContent = (activeCategory === 'all') ? 'All Categories' : activeCategory;
+            if (activeSubcat && subcatMap[activeSubcat]) {
+                activeCatLabel.textContent = activeCategory + ' › ' + subcatMap[activeSubcat].label;
+            } else {
+                activeCatLabel.textContent = (activeCategory === 'all') ? 'All Categories' : activeCategory;
+            }
         }
 
         if (productsCount) {
@@ -338,8 +473,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 activeSubcat = null;
                 activeSlug = null;
                 if (searchInput && searchInput.placeholder.startsWith('Showing:')) {
-                    searchInput.placeholder = 'Search by name, spec, or standard...';
+                    searchInput.placeholder = 'Search by name, spec, or standard (e.g. Hex Bar, Caliper, Reamer)...';
                 }
+                renderSubcatPills();
+                syncUrlState();
                 updateDisplay();
             });
         });
@@ -380,6 +517,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        renderSubcatPills();
         if (catQuery || subcatQueryParam || slugQueryParam || searchQueryParam) {
             updateDisplay();
         }
@@ -395,6 +533,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (searchClearBtn) {
                 searchClearBtn.style.display = searchInput.value.length > 0 ? 'inline-flex' : 'none';
             }
+            renderSubcatPills();
+            syncUrlState();
             updateDisplay();
         });
 
@@ -403,6 +543,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 searchInput.value = '';
                 searchQuery = '';
                 searchClearBtn.style.display = 'none';
+                syncUrlState();
                 updateDisplay();
                 searchInput.focus();
             });
@@ -424,6 +565,8 @@ document.addEventListener('DOMContentLoaded', function () {
         filterBtns.forEach(function (b) {
             b.classList.toggle('active', b.getAttribute('data-filter') === 'all');
         });
+        renderSubcatPills();
+        syncUrlState();
         updateDisplay();
     }
 
@@ -444,9 +587,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 searchQuery = query.toLowerCase();
                 if (searchClearBtn) searchClearBtn.style.display = 'inline-flex';
                 activeCategory = 'all';
+                activeSubcat = null;
+                activeSlug = null;
                 filterBtns.forEach(function (b) {
                     b.classList.toggle('active', b.getAttribute('data-filter') === 'all');
                 });
+                renderSubcatPills();
+                syncUrlState();
                 updateDisplay();
             }
         });

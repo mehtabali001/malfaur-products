@@ -8,12 +8,18 @@
 {{-- ═══════════════════════════════════════
      PAGE HERO
 ═══════════════════════════════════════ --}}
+@php
+    $productsHero = \App\Models\PageContent::getSection('products', 'hero');
+    $prodTitle = $productsHero['title'] ?? 'Product Catalogue';
+    $prodSubtitle = $productsHero['subtitle'] ?? 'Browse our comprehensive range of precision engineering components, cutting tools, aerospace alloys, and raw materials. All products are verified for UK industrial, manufacturing, and trade supply.';
+@endphp
+
 {{-- ═══════════════════════════════════════
      PAGE HERO
 ═══════════════════════════════════════ --}}
 <section class="page-hero catalogue-hero" aria-labelledby="catalogue-heading">
     <div class="page-hero-image" aria-hidden="true">
-        <img src="{{ asset('images/products-hero-banner.jpg') }}" alt="Engineering Tools Workshop Banner" loading="eager">
+        <img src="{{ asset('images/products-hero-banner.jpg') }}" alt="Engineering Tools Workshop Banner" loading="eager" onerror="this.src='{{ asset('images/hero-engineering.png') }}'">
         <div class="hero-mesh-overlay"></div>
     </div>
     <div class="container">
@@ -29,8 +35,8 @@
                 <span>Industrial Precision Range · Malfaur UK</span>
             </div>
 
-            <h1 class="display-2" id="catalogue-heading">Product Catalogue</h1>
-            <p class="lead">Browse our comprehensive range of precision engineering components, cutting tools, aerospace alloys, and raw materials. All products are verified for UK industrial, manufacturing, and trade supply.</p>
+            <h1 class="display-2" id="catalogue-heading">{{ $prodTitle }}</h1>
+            <p class="lead">{{ $prodSubtitle }}</p>
 
             <div class="catalogue-hero-chips">
                 <div class="hero-chip">
@@ -69,37 +75,48 @@
                     <button type="button" id="search-clear-btn" class="search-clear-btn" aria-label="Clear search" style="display:none;">✕</button>
                 </div>
 
+                @php
+                    $filterRootCats = \App\Models\Category::whereNull('parent_id')->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
+                    $iconMap = [
+                        'Cutting Tools' => '⚙',
+                        'Measuring Equipment' => '📐',
+                        'Standard Parts' => '🔩',
+                        'Aerospace Parts' => '✈',
+                        'Raw Materials' => '🧱'
+                    ];
+                @endphp
                 <div class="filter-cats" role="group" aria-label="Filter by category">
                     <button class="filter-btn active" data-filter="all" id="filter-all">
                         <span class="f-dot"></span>
                         <span>All Products</span>
                     </button>
-                    <button class="filter-btn" data-filter="Cutting Tools" id="filter-cutting">
-                        <span class="f-icon">⚙</span>
-                        <span>Cutting Tools</span>
-                    </button>
-                    <button class="filter-btn" data-filter="Measuring Equipment" id="filter-measuring">
-                        <span class="f-icon">📐</span>
-                        <span>Measuring Equipment</span>
-                    </button>
-                    <button class="filter-btn" data-filter="Standard Parts" id="filter-standard">
-                        <span class="f-icon">🔩</span>
-                        <span>Standard Parts</span>
-                    </button>
-                    <button class="filter-btn" data-filter="Aerospace Parts" id="filter-aerospace">
-                        <span class="f-icon">✈</span>
-                        <span>Aerospace Parts</span>
-                    </button>
-                    <button class="filter-btn" data-filter="Raw Materials" id="filter-raw">
-                        <span class="f-icon">🧱</span>
-                        <span>Raw Materials</span>
-                    </button>
+                    @foreach($filterRootCats as $fCat)
+                        <button class="filter-btn" data-filter="{{ $fCat->name }}" id="filter-{{ $fCat->slug }}">
+                            <span class="f-icon">{{ $iconMap[$fCat->name] ?? '✦' }}</span>
+                            <span>{{ $fCat->name }}</span>
+                        </button>
+                    @endforeach
                 </div>
 
                 <button class="filter-clear" id="filter-clear" aria-label="Clear all filters">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     <span>Clear</span>
                 </button>
+            </div>
+
+            {{-- Dynamic Subcategory Tags Filter Bar --}}
+            <div class="subcat-filter-wrapper" id="subcatFilterWrapper" style="display:none;" aria-label="Subcategory filter tags">
+                <div class="subcat-filter-inner">
+                    <span class="subcat-filter-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        <span>Subcategories:</span>
+                    </span>
+                    <div class="subcat-pills" id="subcatPillsContainer" role="group" aria-label="Filter by subcategory">
+                        {{-- Injected dynamically via JS --}}
+                    </div>
+                </div>
             </div>
         </div>
     </div>

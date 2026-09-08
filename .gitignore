@@ -31,3 +31,4 @@ Thumbs.db
 .gemini/
 /public/test_*.php
 /public/scratch/
+*.zip

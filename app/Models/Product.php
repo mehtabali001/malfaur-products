@@ -3,29 +3,78 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
     protected $fillable = [
         'title',
+        'name',
         'slug',
         'category_id',
+        'category',
         'brand_id',
         'image',
+        'short_description',
         'description',
-        'specifications'
+        'specifications',
+        'specs',
+        'is_featured',
+        'is_active'
     ];
 
     protected $casts = [
-        'specifications' => 'array'
+        'specifications' => 'array',
+        'specs' => 'array',
+        'is_featured' => 'boolean',
+        'is_active' => 'boolean'
     ];
+
+    /**
+     * Boot the model. Auto-generate slug if missing.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($product) {
+            if (empty($product->slug)) {
+                $product->slug = Str::slug($product->title ?: $product->name ?: 'product');
+            }
+            if (empty($product->title) && !empty($product->name)) {
+                $product->title = $product->name;
+            }
+            if (empty($product->name) && !empty($product->title)) {
+                $product->name = $product->title;
+            }
+            // Auto map category_id if only category string provided
+            if (empty($product->category_id) && !empty($product->category)) {
+                $catMap = [
+                    'Cutting Tools' => 1,
+                    'Measuring Equipment' => 2,
+                    'Standard Parts' => 3,
+                    'Aerospace Parts' => 4,
+                    'Raw Materials' => 5
+                ];
+                $product->category_id = $catMap[$product->category] ?? 1;
+            }
+        });
+    }
+
+    /**
+     * Relationship to dynamic Category model.
+     */
+    public function categoryItem(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
 
     /**
      * Map 'title' to 'name' for the view.
      */
     public function getNameAttribute()
     {
-        return $this->title;
+        return $this->attributes['name'] ?? $this->attributes['title'] ?? '';
     }
 
     /**
@@ -33,14 +82,21 @@ class Product extends Model
      */
     public function getCategoryAttribute()
     {
-        $categories = [
-            1 => 'Cutting Tools',
-            2 => 'Measuring Equipment',
-            3 => 'Standard Parts',
-            4 => 'Aerospace Parts',
-            5 => 'Raw Materials'
-        ];
-        return $categories[$this->category_id] ?? 'Uncategorised';
+        if ($this->categoryItem) {
+            return $this->categoryItem->name;
+        }
+        if (!empty($this->attributes['category'])) {
+            return $this->attributes['category'];
+        }
+        return 'Cutting Tools';
+    }
+
+    /**
+     * Category Breadcrumb Path (e.g. Cutting Tools > Reamers & Deburring > Machine Reamers).
+     */
+    public function getCategoryBreadcrumbAttribute(): string
+    {
+        return $this->categoryItem ? $this->categoryItem->breadcrumb_path : $this->category;
     }
 
     /**
@@ -48,6 +104,12 @@ class Product extends Model
      */
     public function getSpecsAttribute()
     {
+        if (!empty($this->attributes['specs'])) {
+            $decoded = is_string($this->attributes['specs']) ? json_decode($this->attributes['specs'], true) : $this->attributes['specs'];
+            if (is_array($decoded) && count($decoded) > 0) {
+                return $decoded;
+            }
+        }
         $specs = [];
         $rawSpecs = $this->specifications;
         if (is_array($rawSpecs)) {

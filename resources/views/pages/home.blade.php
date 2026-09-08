@@ -5,21 +5,33 @@
 
 @section('content')
 
+@php
+    $hero = \App\Models\PageContent::getSection('home', 'hero');
+    $heroTitle = $hero['title'] ?? 'Engineering Products Built for Precision and Performance';
+    $heroSubtitle = $hero['subtitle'] ?? 'Malfaur Engineering Products supplies quality-assured engineering components and industrial products to professional customers throughout the United Kingdom. Reliability you can depend on.';
+    $heroBadge = $hero['meta_data']['badge'] ?? 'Established Engineering Supplier · United Kingdom';
+    $heroBtn1 = $hero['meta_data']['primary_btn_text'] ?? 'Explore Products';
+    $heroBtn2 = $hero['meta_data']['secondary_btn_text'] ?? 'Contact Us';
+    $heroImg = $hero['image'] ?? 'images/hero-engineering.png';
+    if (!str_starts_with($heroImg, 'http') && !str_starts_with($heroImg, 'images/')) {
+        $heroImg = 'images/' . $heroImg;
+    }
+@endphp
+
 {{-- ═══════════════════════════════════════
      HERO
 ═══════════════════════════════════════ --}}
 <section class="hero" aria-label="Hero section">
     <div class="hero-content">
         <div class="container-half">
-            <span class="hero-eyebrow">Established Engineering Supplier · United Kingdom</span>
+            <span class="hero-eyebrow">{{ $heroBadge }}</span>
 
             <h1 class="display-1">
-                Engineering Products Built for<br>
-                <em>Precision</em> and Performance
+                {{ $heroTitle }}
             </h1>
 
             <p class="hero-desc">
-                Malfaur Engineering Products supplies quality-assured engineering components and industrial products to professional customers throughout the United Kingdom. Reliability you can depend on.
+                {{ $heroSubtitle }}
             </p>
 
             <div class="hero-actions">
@@ -27,10 +39,10 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
                     </svg>
-                    Explore Products
+                    {{ $heroBtn1 }}
                 </a>
                 <a href="{{ route('contact') }}" class="btn btn-secondary btn-lg" id="hero-contact-btn">
-                    Contact Us
+                    {{ $heroBtn2 }}
                 </a>
             </div>
 
@@ -52,7 +64,7 @@
     </div>
 
     <div class="hero-image-col" aria-hidden="true">
-        <img src="{{ asset('images/hero-engineering.png') }}" alt="Precision engineering components" loading="eager">
+        <img src="{{ asset($heroImg) }}" alt="Precision engineering components" loading="eager" onerror="this.src='{{ asset('images/hero-engineering.png') }}'">
     </div>
 </section>
 
