@@ -176,7 +176,26 @@
 
         <h2 class="sr-only" id="products-list-heading">Products List</h2>
 
-        <div class="product-grid-4">
+        {{-- Product Grid Skeleton Loader (Fast Shimmer Transition) --}}
+        <div class="product-grid-4 product-skeleton-grid" id="productSkeletonGrid" style="display:none;" aria-hidden="true">
+            @for($i = 0; $i < 8; $i++)
+            <div class="product-card-skeleton">
+                <div class="skeleton-img-box skeleton-shimmer"></div>
+                <div class="skeleton-content">
+                    <div class="skeleton-line skeleton-tag skeleton-shimmer"></div>
+                    <div class="skeleton-line skeleton-title skeleton-shimmer"></div>
+                    <div class="skeleton-line skeleton-desc-1 skeleton-shimmer"></div>
+                    <div class="skeleton-line skeleton-desc-2 skeleton-shimmer"></div>
+                    <div class="skeleton-footer-box">
+                        <div class="skeleton-line skeleton-meta skeleton-shimmer"></div>
+                        <div class="skeleton-line skeleton-btn skeleton-shimmer"></div>
+                    </div>
+                </div>
+            </div>
+            @endfor
+        </div>
+
+        <div class="product-grid-4" id="mainProductsGrid">
             @foreach($products as $product)
             <article class="product-card fade-up"
                 data-category="{{ $product->root_category_name }}"
