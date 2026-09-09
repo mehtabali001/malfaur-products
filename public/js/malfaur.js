@@ -246,6 +246,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const productsCount = document.getElementById('products-count');
     const subcatFilterWrapper = document.getElementById('subcatFilterWrapper');
     const subcatPillsContainer = document.getElementById('subcatPillsContainer');
+    const skeletonGrid = document.getElementById('productSkeletonGrid');
+    const mainProductsGrid = document.getElementById('mainProductsGrid') || document.querySelector('.product-grid-4:not(.product-skeleton-grid)');
+    let filterAnimationTimer = null;
 
     // Dynamic categories tree passed from Blade
     const categoryTree = window.MALFAUR_CATEGORIES || [];
@@ -256,6 +259,42 @@ document.addEventListener('DOMContentLoaded', function () {
     let activeSubcatName = null; // Selected Subcategory Name or null
     let activeSlug = null;       // Filter by product slug if clicked from nav
     let searchQuery = '';
+
+    // Trigger fast skeleton loader transition when changing filters
+    function triggerFilterUpdate(immediate) {
+        if (filterAnimationTimer) {
+            clearTimeout(filterAnimationTimer);
+            filterAnimationTimer = null;
+        }
+
+        if (immediate || !skeletonGrid || !mainProductsGrid) {
+            updateDisplay();
+            return;
+        }
+
+        // Show skeleton shimmer placeholders immediately
+        mainProductsGrid.style.display = 'none';
+        const noResults = document.getElementById('no-results');
+        if (noResults) noResults.style.display = 'none';
+        skeletonGrid.style.display = 'grid';
+
+        // Snap to filtered results after a brief, sleek shimmer (190ms)
+        filterAnimationTimer = setTimeout(function () {
+            skeletonGrid.style.display = 'none';
+            mainProductsGrid.style.display = 'grid';
+            updateDisplay();
+
+            // Apply smooth entrance fade to visible cards
+            productCards.forEach(function (card) {
+                if (card.style.display !== 'none') {
+                    card.classList.remove('card-filter-fadein');
+                    void card.offsetWidth; // Trigger reflow for animation restart
+                    card.classList.add('card-filter-fadein');
+                }
+            });
+            filterAnimationTimer = null;
+        }, 190);
+    }
 
     // Helper: Find category node by ID or slug in tree recursively with level2 and parent info
     function findCategoryInTree(tree, matchFn) {
@@ -427,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function () {
             activeSlug = null;
             renderSubcatPills();
             syncUrlState();
-            updateDisplay();
+            triggerFilterUpdate(false);
         });
         tier1Row.appendChild(allBtn);
 
@@ -450,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 activeSlug = null;
                 renderSubcatPills();
                 syncUrlState();
-                updateDisplay();
+                triggerFilterUpdate(false);
             });
 
             tier1Row.appendChild(btn);
@@ -483,7 +522,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 activeSlug = null;
                 renderSubcatPills();
                 syncUrlState();
-                updateDisplay();
+                triggerFilterUpdate(false);
             });
             tier2Row.appendChild(allL2Btn);
 
@@ -507,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     activeSlug = null;
                     renderSubcatPills();
                     syncUrlState();
-                    updateDisplay();
+                    triggerFilterUpdate(false);
                 });
 
                 tier2Row.appendChild(cBtn);
@@ -651,7 +690,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 renderSubcatPills();
                 syncUrlState();
-                updateDisplay();
+                triggerFilterUpdate(false);
             });
         });
 
@@ -729,6 +768,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const searchClearBtn = document.getElementById('search-clear-btn');
+    let searchDebounceTimer = null;
 
     if (searchInput) {
         searchInput.addEventListener('input', function () {
@@ -741,7 +781,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             renderSubcatPills();
             syncUrlState();
-            updateDisplay();
+            if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(function () {
+                triggerFilterUpdate(false);
+            }, 90);
         });
 
         if (searchClearBtn) {
@@ -750,7 +793,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 searchQuery = '';
                 searchClearBtn.style.display = 'none';
                 syncUrlState();
-                updateDisplay();
+                triggerFilterUpdate(false);
                 searchInput.focus();
             });
         }
@@ -775,7 +818,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         renderSubcatPills();
         syncUrlState();
-        updateDisplay();
+        triggerFilterUpdate(false);
     }
 
     if (filterClear) {
@@ -804,7 +847,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 renderSubcatPills();
                 syncUrlState();
-                updateDisplay();
+                triggerFilterUpdate(false);
             }
         });
     });

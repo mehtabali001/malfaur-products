@@ -1969,6 +1969,124 @@ input, textarea, select { font-family: inherit; }
   gap: 1.5rem;
 }
 
+/* ── Product Card Skeleton Loader & Shimmer Animation ── */
+.product-skeleton-grid {
+  width: 100%;
+}
+
+.product-card-skeleton {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.skeleton-img-box {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-content {
+  padding: 1.4rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-line {
+  border-radius: 4px;
+}
+
+.skeleton-tag {
+  width: 45%;
+  height: 15px;
+  margin-bottom: 0.65rem;
+}
+
+.skeleton-title {
+  width: 78%;
+  height: 20px;
+  margin-bottom: 0.65rem;
+}
+
+.skeleton-desc-1 {
+  width: 95%;
+  height: 12px;
+  margin-bottom: 0.4rem;
+}
+
+.skeleton-desc-2 {
+  width: 68%;
+  height: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.skeleton-footer-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+  gap: 0.5rem;
+}
+
+.skeleton-meta {
+  width: 65px;
+  height: 16px;
+}
+
+.skeleton-btn {
+  width: 92px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+}
+
+/* Shimmer Wave Animation */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e2e8f0 35%,
+    #e8edf4 50%,
+    #e2e8f0 65%,
+    #f1f5f9 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.15s infinite ease-in-out;
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Smooth Fade-In For Filtered Cards */
+.card-filter-fadein {
+  animation: cardFilterFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardFilterFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Product Modal */
 .modal-overlay {
   position: fixed;
