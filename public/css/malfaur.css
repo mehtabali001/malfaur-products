@@ -1584,38 +1584,38 @@ input, textarea, select { font-family: inherit; }
   color: #b91c1c;
 }
 
-/* ── Dynamic Subcategory Filter Tag Pills (Centered & Distinct Yellow Layout) ── */
+/* ── Dynamic Subcategory Filter Tag Pills (Compact, Clean & Modern Layout) ── */
 .subcat-filter-wrapper {
-  margin-top: 0.95rem;
-  padding: 0.65rem 1.15rem;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  margin-top: 0.75rem;
+  padding: 0.45rem 0.85rem;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.02);
-  animation: megaFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  animation: megaFadeIn 0.2s ease-out;
 }
 .subcat-filter-inner {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.85rem;
+  gap: 0.6rem;
   flex-wrap: wrap;
   text-align: center;
 }
 .subcat-filter-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #475569;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #64748b;
   background: #ffffff;
-  padding: 0.25rem 0.65rem;
-  border-radius: 6px;
+  padding: 0.18rem 0.5rem;
+  border-radius: 5px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   flex-shrink: 0;
 }
 .subcat-filter-label svg {
@@ -1625,61 +1625,131 @@ input, textarea, select { font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   flex-wrap: wrap;
 }
 .subcat-pill-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.8rem;
-  font-size: 0.775rem;
-  font-weight: 500;
-  border-radius: 8px;
+  gap: 0.3rem;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  border-radius: 6px;
   background: #ffffff;
   color: #334155;
   border: 1px solid #cbd5e1;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.15s ease;
   user-select: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  line-height: 1.25;
 }
 .subcat-pill-btn:hover {
-  background: #fef08a;
+  background: #fef9c3;
   color: #0f172a;
-  border-color: #eab308;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(234, 179, 8, 0.22);
+  border-color: #facc15;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(234, 179, 8, 0.15);
 }
 .subcat-pill-btn.active {
   background: #eab308;
   color: #0f172a;
   border-color: #d97706;
-  font-weight: 700;
-  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.38), 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(234, 179, 8, 0.28);
   transform: translateY(-1px);
 }
 .subcat-pill-btn .subcat-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.06rem 0.4rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  border-radius: 6px;
+  padding: 0.02rem 0.3rem;
+  font-size: 0.62rem;
+  font-weight: 500;
+  border-radius: 4px;
   background: #f1f5f9;
   color: #64748b;
-  min-width: 17px;
-  transition: all 0.2s ease;
+  min-width: 14px;
+  transition: all 0.15s ease;
 }
 .subcat-pill-btn:hover .subcat-count {
-  background: rgba(180, 83, 9, 0.15);
-  color: #78350F;
+  background: rgba(180, 83, 9, 0.14);
+  color: #78350f;
 }
 .subcat-pill-btn.active .subcat-count {
   background: rgba(15, 23, 42, 0.14);
   color: #0f172a;
-  font-weight: 800;
+  font-weight: 500;
+}
+
+.subcat-pills-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.subcat-child-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  width: 100%;
+  padding-top: 0.45rem;
+  margin-top: 0.45rem;
+  border-top: 1px dashed #e2e8f0;
+  animation: pdpSlideFadeIn 0.2s ease-out forwards;
+}
+
+.subcat-child-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.16rem 0.45rem;
+  border-radius: 5px;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.subcat-pill-btn.child-pill {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background: #ffffff;
+  border-color: #cbd5e1;
+  font-weight: 400;
+}
+
+.subcat-pill-btn.child-pill:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.subcat-pill-btn.child-pill.active {
+  background: var(--navy);
+  color: #ffffff;
+  border-color: var(--navy);
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(11, 30, 61, 0.22);
+  transform: translateY(-1px);
+}
+
+.subcat-pill-btn.child-pill.active .subcat-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-weight: 500;
 }
 
 /* Catalogue Grid Section */
@@ -3186,6 +3256,357 @@ textarea.form-input { resize: vertical; min-height: 120px; }
   .pdp-specs-table td {
     padding: 0.9rem 1rem;
   }
+  .pdp-quote-form-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
+
+/* ============================================================
+   INLINE PRODUCT QUOTE & ENQUIRY FORM
+   ============================================================ */
+.pdp-quote-form-container {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.35s ease,
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.35s ease;
+  margin-top: 0;
+  pointer-events: none;
+  width: 100%;
+}
+
+.pdp-quote-form-container.is-open {
+  max-height: 2000px;
+  opacity: 1;
+  transform: translateY(0);
+  margin-top: 1.5rem;
+  pointer-events: auto;
+}
+
+.pdp-quote-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-top: 3.5px solid var(--accent);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 30px -5px rgba(11, 30, 61, 0.10), 0 4px 10px rgba(0, 0, 0, 0.04);
+  padding: 1.5rem 1.75rem;
+  position: relative;
+  animation: pdpSlideFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pdpSlideFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pdp-quote-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.pdp-quote-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 0.2rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pdp-quote-title-icon {
+  color: var(--accent);
+}
+
+.pdp-quote-sub {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.pdp-quote-close-btn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: var(--text-muted);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.pdp-quote-close-btn:hover {
+  background: var(--navy);
+  color: #ffffff;
+  border-color: var(--navy);
+  transform: rotate(90deg);
+}
+
+/* Product Context Strip */
+.pdp-quote-product-badge {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pdp-quote-prod-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.pdp-quote-prod-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.pdp-quote-prod-cat {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(200, 134, 10, 0.12);
+  color: var(--accent);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.pdp-quote-prod-badge-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Form Layout */
+.pdp-quote-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.pdp-quote-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.pdp-quote-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.pdp-quote-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pdp-quote-label .req {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.pdp-quote-label .opt {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+.pdp-quote-input,
+.pdp-quote-textarea,
+.pdp-quote-select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  background: #ffffff;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.pdp-quote-input:focus,
+.pdp-quote-textarea:focus,
+.pdp-quote-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200, 134, 10, 0.16);
+  background: #ffffff;
+}
+
+.pdp-quote-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+/* Submit Actions */
+.pdp-quote-actions {
+  margin-top: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.pdp-quote-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.925rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(200, 134, 10, 0.25);
+}
+
+.pdp-quote-submit-btn:hover {
+  background: var(--accent-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(200, 134, 10, 0.35);
+}
+
+.pdp-quote-submit-btn:active {
+  transform: translateY(0);
+}
+
+.pdp-quote-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pdp-quote-footer-note {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+/* Spinner */
+.pdp-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: pdpSpin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes pdpSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Success & Error State Panels */
+.pdp-quote-success-panel {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  animation: pdpSlideFadeIn 0.35s ease forwards;
+}
+
+.pdp-quote-success-icon-wrap {
+  width: 54px;
+  height: 54px;
+  background: #ecfdf5;
+  border: 2px solid #a7f3d0;
+  color: #059669;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  animation: pdpCheckPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pdpCheckPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.pdp-quote-success-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 0.4rem;
+}
+
+.pdp-quote-success-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 440px;
+  margin: 0 auto 1.25rem;
+}
+
+.pdp-quote-success-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pdp-quote-error-alert {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
 
 

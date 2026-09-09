@@ -257,27 +257,37 @@ document.addEventListener('DOMContentLoaded', function () {
     let activeSlug = null;       // Filter by product slug if clicked from nav
     let searchQuery = '';
 
-    // Helper: Find category node by ID or slug in tree recursively
+    // Helper: Find category node by ID or slug in tree recursively with level2 and parent info
     function findCategoryInTree(tree, matchFn) {
         if (!tree || !tree.length) return null;
         for (let i = 0; i < tree.length; i++) {
-            const node = tree[i];
-            if (matchFn(node)) return { node: node, root: node, parent: null };
-            if (node.children && node.children.length) {
-                const found = findCategoryInChildren(node.children, matchFn, node, node);
-                if (found) return found;
+            const root = tree[i];
+            if (matchFn(root)) {
+                return { node: root, root: root, parent: null, level2: null };
             }
-        }
-        return null;
-    }
-
-    function findCategoryInChildren(children, matchFn, parentNode, rootNode) {
-        for (let i = 0; i < children.length; i++) {
-            const child = children[i];
-            if (matchFn(child)) return { node: child, root: rootNode, parent: parentNode };
-            if (child.children && child.children.length) {
-                const found = findCategoryInChildren(child.children, matchFn, child, rootNode);
-                if (found) return found;
+            if (root.children && root.children.length) {
+                for (let j = 0; j < root.children.length; j++) {
+                    const sub = root.children[j];
+                    if (matchFn(sub)) {
+                        return { node: sub, root: root, parent: root, level2: sub };
+                    }
+                    if (sub.children && sub.children.length) {
+                        for (let k = 0; k < sub.children.length; k++) {
+                            const leaf = sub.children[k];
+                            if (matchFn(leaf)) {
+                                return { node: leaf, root: root, parent: sub, level2: sub };
+                            }
+                            if (leaf.children && leaf.children.length) {
+                                for (let m = 0; m < leaf.children.length; m++) {
+                                    const deep = leaf.children[m];
+                                    if (matchFn(deep)) {
+                                        return { node: deep, root: root, parent: leaf, level2: sub };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         return null;
@@ -382,6 +392,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
         subcatPillsContainer.innerHTML = '';
 
+        // Determine active Level 2 node if any
+        let activeLevel2Node = null;
+        let activeNodeInfo = null;
+
+        if (activeSubcatId !== null) {
+            activeNodeInfo = findCategoryInTree(categoryTree, function (c) {
+                return Number(c.id) === Number(activeSubcatId) || c.slug === String(activeSubcatId);
+            });
+            if (activeNodeInfo) {
+                if (activeNodeInfo.level2) {
+                    activeLevel2Node = activeNodeInfo.level2;
+                } else if (activeNodeInfo.parent && activeNodeInfo.parent === activeNodeInfo.root) {
+                    activeLevel2Node = activeNodeInfo.node;
+                }
+            }
+        }
+
+        // Tier 1 Wrapper: Level 2 Subcategories
+        const tier1Row = document.createElement('div');
+        tier1Row.className = 'subcat-pills-row tier-1-row';
+
         // 1. "All [Root Category]" pill
         const rootTotalCount = countProductsForCategory(currentRoot.name, currentRoot.all_ids || [currentRoot.id]);
         const allBtn = document.createElement('button');
@@ -391,15 +422,14 @@ document.addEventListener('DOMContentLoaded', function () {
         allBtn.innerHTML = `<span>All ${currentRoot.name}</span><span class="subcat-count">${rootTotalCount}</span>`;
 
         allBtn.addEventListener('click', function () {
-            subcatPillsContainer.querySelectorAll('.subcat-pill-btn').forEach(function (b) { b.classList.remove('active'); });
-            allBtn.classList.add('active');
             activeSubcatId = null;
             activeSubcatName = null;
             activeSlug = null;
+            renderSubcatPills();
             syncUrlState();
             updateDisplay();
         });
-        subcatPillsContainer.appendChild(allBtn);
+        tier1Row.appendChild(allBtn);
 
         // 2. Child Level 2 subcategories
         currentRoot.children.forEach(function (sub) {
@@ -408,23 +438,83 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const btn = document.createElement('button');
             btn.type = 'button';
-            const isSubActive = activeSubcatId !== null && (Number(activeSubcatId) === Number(sub.id) || (sub.all_ids && sub.all_ids.includes(Number(activeSubcatId))));
+            const isSubActive = (activeLevel2Node && Number(activeLevel2Node.id) === Number(sub.id)) ||
+                                (activeSubcatId !== null && (Number(activeSubcatId) === Number(sub.id) || (sub.all_ids && sub.all_ids.includes(Number(activeSubcatId)))));
             btn.className = 'subcat-pill-btn' + (isSubActive ? ' active' : '');
             btn.setAttribute('data-subcat-id', sub.id);
             btn.innerHTML = `<span>${sub.name}</span><span class="subcat-count">${subCount}</span>`;
 
             btn.addEventListener('click', function () {
-                subcatPillsContainer.querySelectorAll('.subcat-pill-btn').forEach(function (b) { b.classList.remove('active'); });
-                btn.classList.add('active');
                 activeSubcatId = sub.id;
                 activeSubcatName = sub.name;
                 activeSlug = null;
+                renderSubcatPills();
                 syncUrlState();
                 updateDisplay();
             });
 
-            subcatPillsContainer.appendChild(btn);
+            tier1Row.appendChild(btn);
         });
+
+        subcatPillsContainer.appendChild(tier1Row);
+
+        // Tier 2: If active Level 2 node has children (e.g. Machine Reamers, Hand Reamers, Chucking Reamers...)
+        if (activeLevel2Node && activeLevel2Node.children && activeLevel2Node.children.length > 0) {
+            const tier2Row = document.createElement('div');
+            tier2Row.className = 'subcat-child-row';
+
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'subcat-child-label';
+            labelSpan.innerHTML = `<span>${activeLevel2Node.name} types:</span>`;
+            tier2Row.appendChild(labelSpan);
+
+            // "All [Subcategory]" pill
+            const level2TotalCount = countProductsForCategory(currentRoot.name, activeLevel2Node.all_ids || [activeLevel2Node.id]);
+            const allL2Btn = document.createElement('button');
+            allL2Btn.type = 'button';
+            const isAllL2Active = (Number(activeSubcatId) === Number(activeLevel2Node.id));
+            allL2Btn.className = 'subcat-pill-btn child-pill' + (isAllL2Active ? ' active' : '');
+            allL2Btn.setAttribute('data-subcat-id', activeLevel2Node.id);
+            allL2Btn.innerHTML = `<span>All ${activeLevel2Node.name}</span><span class="subcat-count">${level2TotalCount}</span>`;
+
+            allL2Btn.addEventListener('click', function () {
+                activeSubcatId = activeLevel2Node.id;
+                activeSubcatName = activeLevel2Node.name;
+                activeSlug = null;
+                renderSubcatPills();
+                syncUrlState();
+                updateDisplay();
+            });
+            tier2Row.appendChild(allL2Btn);
+
+            // Each Level 3 child pill
+            activeLevel2Node.children.forEach(function (child) {
+                const childIds = child.all_ids && child.all_ids.length ? child.all_ids : [child.id];
+                const directCount = countProductsForCategory(currentRoot.name, childIds);
+                const displayCount = directCount > 0 ? directCount : level2TotalCount;
+
+                const cBtn = document.createElement('button');
+                cBtn.type = 'button';
+                const isChildActive = (Number(activeSubcatId) === Number(child.id)) ||
+                                     (child.all_ids && child.all_ids.includes(Number(activeSubcatId)));
+                cBtn.className = 'subcat-pill-btn child-pill' + (isChildActive ? ' active' : '');
+                cBtn.setAttribute('data-subcat-id', child.id);
+                cBtn.innerHTML = `<span>${child.name}</span><span class="subcat-count">${displayCount}</span>`;
+
+                cBtn.addEventListener('click', function () {
+                    activeSubcatId = child.id;
+                    activeSubcatName = child.name;
+                    activeSlug = null;
+                    renderSubcatPills();
+                    syncUrlState();
+                    updateDisplay();
+                });
+
+                tier2Row.appendChild(cBtn);
+            });
+
+            subcatPillsContainer.appendChild(tier2Row);
+        }
 
         subcatFilterWrapper.style.display = 'block';
     }
@@ -432,6 +522,25 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateDisplay() {
         let visible = 0;
         const currentRoot = findRootCategory(activeCategory);
+
+        let activeNodeInfo = null;
+        if (activeSubcatId !== null) {
+            activeNodeInfo = findCategoryInTree(categoryTree, function (c) {
+                return Number(c.id) === Number(activeSubcatId) || c.slug === String(activeSubcatId);
+            });
+        }
+
+        // First pass: check how many direct category ID matches exist
+        let directMatchesCount = 0;
+        if (activeNodeInfo && activeNodeInfo.node) {
+            const targetIds = activeNodeInfo.node.all_ids && activeNodeInfo.node.all_ids.length ? activeNodeInfo.node.all_ids : [activeNodeInfo.node.id];
+            productCards.forEach(function (card) {
+                const cardIds = getCardCategoryIds(card);
+                if (targetIds.some(function (id) { return cardIds.includes(Number(id)); })) {
+                    directMatchesCount++;
+                }
+            });
+        }
 
         productCards.forEach(function (card) {
             const cardRoot = (card.getAttribute('data-root-category') || card.getAttribute('data-category') || '').toLowerCase();
@@ -453,16 +562,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // 2. Subcategory Match
             let matchSubcat = true;
-            if (activeSubcatId !== null) {
-                const foundSub = findCategoryInTree(categoryTree, function (c) {
-                    return Number(c.id) === Number(activeSubcatId) || c.slug === String(activeSubcatId);
-                });
+            if (activeSubcatId !== null && activeNodeInfo && activeNodeInfo.node) {
+                const targetIds = activeNodeInfo.node.all_ids && activeNodeInfo.node.all_ids.length ? activeNodeInfo.node.all_ids : [activeNodeInfo.node.id];
+                const directMatch = targetIds.some(function (id) { return cardIds.includes(Number(id)); }) || cardCatName.includes(activeNodeInfo.node.name.toLowerCase());
 
-                if (foundSub && foundSub.node) {
-                    const targetIds = foundSub.node.all_ids && foundSub.node.all_ids.length ? foundSub.node.all_ids : [foundSub.node.id];
-                    matchSubcat = targetIds.some(function (id) { return cardIds.includes(Number(id)); }) || cardCatName.includes(foundSub.node.name.toLowerCase());
+                if (directMatch) {
+                    matchSubcat = true;
+                } else if (directMatchesCount === 0 && activeNodeInfo.parent) {
+                    // Fallback to parent subcategory family (e.g. Reamers & Deburring) so products are shown
+                    const parentIds = activeNodeInfo.parent.all_ids && activeNodeInfo.parent.all_ids.length ? activeNodeInfo.parent.all_ids : [activeNodeInfo.parent.id];
+                    matchSubcat = parentIds.some(function (id) { return cardIds.includes(Number(id)); }) || cardCatName.includes(activeNodeInfo.parent.name.toLowerCase());
                 } else {
-                    matchSubcat = cardIds.includes(Number(activeSubcatId));
+                    matchSubcat = false;
                 }
             }
 
@@ -497,7 +608,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const activeCatLabel = document.getElementById('active-category-label');
         if (activeCatLabel) {
             if (activeSubcatName) {
-                activeCatLabel.textContent = activeCategory + ' › ' + activeSubcatName;
+                if (activeNodeInfo && activeNodeInfo.parent && activeNodeInfo.parent.name !== activeCategory) {
+                    activeCatLabel.textContent = activeCategory + ' › ' + activeNodeInfo.parent.name + ' › ' + activeSubcatName;
+                } else {
+                    activeCatLabel.textContent = activeCategory + ' › ' + activeSubcatName;
+                }
             } else {
                 activeCatLabel.textContent = (activeCategory === 'all') ? 'All Categories' : activeCategory;
             }
@@ -508,7 +623,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (searchQuery) {
                 label += ' for "' + searchQuery + '"';
             } else if (activeSubcatName) {
-                label += ' in ' + activeSubcatName;
+                if (activeNodeInfo && activeNodeInfo.parent && activeNodeInfo.parent.name !== activeCategory) {
+                    label += ' in ' + activeNodeInfo.parent.name + ' › ' + activeSubcatName;
+                } else {
+                    label += ' in ' + activeSubcatName;
+                }
             } else if (activeCategory !== 'all') {
                 label += ' in ' + activeCategory;
             }

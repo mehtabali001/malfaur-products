@@ -108,14 +108,14 @@
 
 
 
-                {{-- Existing Action Buttons --}}
+                {{-- Action Buttons --}}
                 <div class="pdp-actions-wrap">
-                    <a href="{{ route('contact', ['product' => $product->name]) }}" class="btn btn-primary btn-lg">
+                    <button type="button" class="btn btn-primary btn-lg" id="btnToggleQuoteForm" aria-expanded="false" aria-controls="pdpQuoteFormContainer">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                         </svg>
-                        Request Quote / Enquiry
-                    </a>
+                        <span id="btnQuoteLabel">Request Quote / Enquiry</span>
+                    </button>
                     <a href="mailto:{{ \App\Models\Setting::get('contact_email', 'enquiries@malfaurengineering.co.uk') }}?subject=Technical Inquiry: {{ rawurlencode($product->name) }}" class="btn btn-outline btn-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -124,7 +124,159 @@
                     </a>
                 </div>
 
+                {{-- Inline Quote / Enquiry Form (Appears with smooth fade animation) --}}
+                <div class="pdp-quote-form-container" id="pdpQuoteFormContainer" role="region" aria-label="Quote Request Form">
+                    <div class="pdp-quote-card">
+                        
+                        {{-- Form Header --}}
+                        <div class="pdp-quote-header">
+                            <div>
+                                <h3 class="pdp-quote-title">
+                                    <svg class="pdp-quote-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                    Request Engineering Quote
+                                </h3>
+                                <p class="pdp-quote-sub">Our UK technical sales team will review your specifications and reply promptly.</p>
+                            </div>
+                            <button type="button" class="pdp-quote-close-btn" id="btnCloseQuoteForm" aria-label="Close quote form">
+                                ✕
+                            </button>
+                        </div>
 
+                        {{-- Product Context Banner (Shows Selected Product and Specs) --}}
+                        <div class="pdp-quote-product-badge">
+                            <div class="pdp-quote-prod-info">
+                                <span class="pdp-quote-prod-name">{{ $product->name }}</span>
+                                <span class="pdp-quote-prod-cat">{{ $product->category }}</span>
+                            </div>
+                            <span class="pdp-quote-prod-badge-tag">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                                Verified Item
+                            </span>
+                        </div>
+
+                        {{-- Error Alert Area --}}
+                        <div class="pdp-quote-error-alert" id="quoteFormError" style="display: none;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span id="quoteFormErrorText">Please fill in all required fields.</span>
+                        </div>
+
+                        {{-- Interactive Quote Form --}}
+                        <form id="pdpInlineQuoteForm" action="{{ route('contact.submit') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="product_name" id="quoteProductName" value="{{ $product->name }}">
+                            <input type="hidden" name="product_category" value="{{ $product->category }}">
+                            <input type="hidden" name="subject" id="quoteSubject" value="Quote Request: {{ $product->name }}">
+
+                            <div class="pdp-quote-form-grid">
+                                <div class="pdp-quote-field">
+                                    <label class="pdp-quote-label" for="quote_name">
+                                        <span>Full Name <span class="req">*</span></span>
+                                    </label>
+                                    <input type="text" id="quote_name" name="name" class="pdp-quote-input" placeholder="e.g. David Smith" required autocomplete="name">
+                                </div>
+                                <div class="pdp-quote-field">
+                                    <label class="pdp-quote-label" for="quote_email">
+                                        <span>Work Email <span class="req">*</span></span>
+                                    </label>
+                                    <input type="email" id="quote_email" name="email" class="pdp-quote-input" placeholder="e.g. david@engineering.co.uk" required autocomplete="email">
+                                </div>
+                            </div>
+
+                            <div class="pdp-quote-form-grid">
+                                <div class="pdp-quote-field">
+                                    <label class="pdp-quote-label" for="quote_phone">
+                                        <span>Phone Number</span>
+                                        <span class="opt">Optional</span>
+                                    </label>
+                                    <input type="tel" id="quote_phone" name="phone" class="pdp-quote-input" placeholder="+44 (0) ..." autocomplete="tel">
+                                </div>
+                                <div class="pdp-quote-field">
+                                    <label class="pdp-quote-label" for="quote_company">
+                                        <span>Company / Organization</span>
+                                        <span class="opt">Optional</span>
+                                    </label>
+                                    <input type="text" id="quote_company" name="company" class="pdp-quote-input" placeholder="e.g. Apex Precision Ltd" autocomplete="organization">
+                                </div>
+                            </div>
+
+                            <div class="pdp-quote-form-grid">
+                                <div class="pdp-quote-field">
+                                    <label class="pdp-quote-label" for="quote_quantity">
+                                        <span>Required Quantity / Length / Batch</span>
+                                        <span class="opt">Optional</span>
+                                    </label>
+                                    <input type="text" id="quote_quantity" name="quantity" class="pdp-quote-input" placeholder="e.g. 10 pcs, 250m, Prototype batch...">
+                                </div>
+                                <div class="pdp-quote-field">
+                                    <label class="pdp-quote-label" for="quote_lead_time">
+                                        <span>Target Delivery / Lead Time</span>
+                                        <span class="opt">Optional</span>
+                                    </label>
+                                    <input type="text" id="quote_lead_time" name="lead_time" class="pdp-quote-input" placeholder="e.g. Standard / Urgent / Scheduled">
+                                </div>
+                            </div>
+
+                            <div class="pdp-quote-field full-width">
+                                <label class="pdp-quote-label" for="quote_message">
+                                    <span>Specifications & Requirements <span class="req">*</span></span>
+                                </label>
+                                @php
+                                    $specSummary = [];
+                                    if (!empty($product->specs) && is_array($product->specs)) {
+                                        foreach(array_slice($product->specs, 0, 4) as $s) {
+                                            $specSummary[] = $s[0] . ': ' . $s[1];
+                                        }
+                                    }
+                                    $defaultMsg = "Hello, I would like to request a formal price quote and availability for {$product->name} (Category: {$product->category}).";
+                                    if (count($specSummary) > 0) {
+                                        $defaultMsg .= "\nKey Specifications: " . implode(', ', $specSummary) . ".";
+                                    }
+                                    $defaultMsg .= "\nPlease provide pricing, delivery lead times, and trade volume terms.";
+                                @endphp
+                                <textarea id="quote_message" name="message" class="pdp-quote-textarea" rows="3" required placeholder="Describe any custom tolerances, dimensions, or delivery specifications...">{{ $defaultMsg }}</textarea>
+                            </div>
+
+                            <div class="pdp-quote-actions">
+                                <button type="submit" class="pdp-quote-submit-btn" id="btnSubmitQuote">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                    </svg>
+                                    <span id="btnSubmitQuoteText">Submit Quote Enquiry</span>
+                                </button>
+                                <div class="pdp-quote-footer-note">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                    <span>Sent directly to technical desk • Stored in Malfaur secure system</span>
+                                </div>
+                            </div>
+                        </form>
+
+                        {{-- Success Panel (Appears dynamically after submission) --}}
+                        <div class="pdp-quote-success-panel" id="quoteSuccessPanel" style="display: none;">
+                            <div class="pdp-quote-success-icon-wrap">
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <h4 class="pdp-quote-success-title">Quote Request Submitted!</h4>
+                            <p class="pdp-quote-success-desc" id="quoteSuccessDesc">
+                                Thank you! Your quotation enquiry for <strong>{{ $product->name }}</strong> has been logged in our system and sent to our technical sales engineering desk.
+                            </p>
+                            <div class="pdp-quote-success-actions">
+                                <button type="button" class="btn btn-outline btn-sm" id="btnResetQuoteForm">
+                                    Send Another Request
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm" id="btnCloseSuccessQuote">
+                                    Done
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
 
             </div>
 
@@ -288,9 +440,9 @@
                                     </td>
                                 @endforeach
                                 <td>
-                                    <a href="{{ route('contact', ['product' => $product->name, 'sku' => $row['SKU'] ?? '']) }}" class="pdp-enquire-link">
+                                    <button type="button" class="pdp-enquire-link" onclick="openQuoteForSku('{{ $row['SKU'] ?? '' }}')">
                                         Enquire Item →
-                                    </a>
+                                    </button>
                                 </td>
                             </tr>
                         @endforeach
@@ -694,5 +846,160 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endif
+
+{{-- Inline Quote Form JavaScript Handler --}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('btnToggleQuoteForm');
+    const container = document.getElementById('pdpQuoteFormContainer');
+    const closeBtn = document.getElementById('btnCloseQuoteForm');
+    const form = document.getElementById('pdpInlineQuoteForm');
+    const submitBtn = document.getElementById('btnSubmitQuote');
+    const errorAlert = document.getElementById('quoteFormError');
+    const errorText = document.getElementById('quoteFormErrorText');
+    const successPanel = document.getElementById('quoteSuccessPanel');
+    const successDesc = document.getElementById('quoteSuccessDesc');
+    const resetBtn = document.getElementById('btnResetQuoteForm');
+    const closeSuccessBtn = document.getElementById('btnCloseSuccessQuote');
+
+    function openQuoteForm(customSku = null) {
+        if (!container) return;
+        container.classList.add('is-open');
+        if (toggleBtn) {
+            toggleBtn.setAttribute('aria-expanded', 'true');
+            toggleBtn.classList.add('is-active');
+        }
+        if (customSku) {
+            const qtyInput = document.getElementById('quote_quantity');
+            const msgArea = document.getElementById('quote_message');
+            if (qtyInput) {
+                qtyInput.value = 'SKU: ' + customSku;
+            }
+            if (msgArea && !msgArea.value.includes(customSku)) {
+                msgArea.value = 'I would like to enquire specifically regarding item SKU: ' + customSku + ' of {{ addslashes($product->name) }}.\n\n' + msgArea.value;
+            }
+        }
+        setTimeout(() => {
+            const nameInput = document.getElementById('quote_name');
+            if (nameInput) nameInput.focus();
+        }, 220);
+    }
+
+    function closeQuoteForm() {
+        if (!container) return;
+        container.classList.remove('is-open');
+        if (toggleBtn) {
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            toggleBtn.classList.remove('is-active');
+        }
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (container.classList.contains('is-open')) {
+                closeQuoteForm();
+            } else {
+                openQuoteForm();
+            }
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            closeQuoteForm();
+        });
+    }
+
+    if (closeSuccessBtn) {
+        closeSuccessBtn.addEventListener('click', function() {
+            closeQuoteForm();
+        });
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            if (successPanel) successPanel.style.display = 'none';
+            if (form) {
+                form.style.display = 'block';
+                form.reset();
+            }
+            if (errorAlert) errorAlert.style.display = 'none';
+        });
+    }
+
+    // Expose helper to global window for table SKU clicks
+    window.openQuoteForSku = function(sku) {
+        openQuoteForm(sku);
+        if (container) {
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    };
+
+    // Handle AJAX Form Submission
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (errorAlert) errorAlert.style.display = 'none';
+
+            // Validate required fields
+            const nameInput = document.getElementById('quote_name');
+            const emailInput = document.getElementById('quote_email');
+            const messageInput = document.getElementById('quote_message');
+
+            const name = nameInput ? nameInput.value.trim() : '';
+            const email = emailInput ? emailInput.value.trim() : '';
+            const message = messageInput ? messageInput.value.trim() : '';
+
+            if (!name || !email || !message) {
+                if (errorText) errorText.textContent = 'Please complete all required fields (Name, Email, Requirements).';
+                if (errorAlert) errorAlert.style.display = 'flex';
+                return;
+            }
+
+            // Disable submit button and render spinner
+            const originalBtnHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="pdp-spinner"></span> <span>Submitting Quote Request...</span>';
+
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errData => {
+                        throw new Error(errData.message || 'There was an issue submitting your request. Please try again.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+
+                // Hide form and display success panel
+                form.style.display = 'none';
+                if (data.message && successDesc) {
+                    successDesc.innerHTML = 'Thank you, <strong>' + name + '</strong>! ' + data.message;
+                }
+                if (successPanel) successPanel.style.display = 'block';
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+                if (errorText) errorText.textContent = err.message || 'Could not submit your quote request. Please check your connection and try again.';
+                if (errorAlert) errorAlert.style.display = 'flex';
+            });
+        });
+    }
+});
+</script>
 
 @endsection

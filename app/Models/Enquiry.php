@@ -19,6 +19,28 @@ class Enquiry extends Model
     ];
 
     /**
+     * Virtual product name attribute with fallback to subject parsing.
+     */
+    public function getProductNameAttribute()
+    {
+        if (!empty($this->attributes['product_name'])) {
+            return $this->attributes['product_name'];
+        }
+        if (!empty($this->subject)) {
+            if (str_starts_with($this->subject, 'Quote Request:')) {
+                return trim(substr($this->subject, 14));
+            }
+            if (str_starts_with($this->subject, 'Technical Inquiry:')) {
+                return trim(substr($this->subject, 18));
+            }
+            if (str_starts_with($this->subject, 'Product Enquiry:')) {
+                return trim(substr($this->subject, 16));
+            }
+        }
+        return null;
+    }
+
+    /**
      * Scope for unread / new enquiries.
      */
     public function scopeUnread($query)

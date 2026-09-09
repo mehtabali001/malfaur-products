@@ -139,7 +139,7 @@
             <div class="subcat-filter-wrapper" id="subcatFilterWrapper" style="display:none;" aria-label="Subcategory filter tags">
                 <div class="subcat-filter-inner">
                     <span class="subcat-filter-label">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                         </svg>
                         <span>Subcategories:</span>
